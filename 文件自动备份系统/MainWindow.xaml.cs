@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Threading;
 
 namespace 自动备份系统
 {
@@ -25,11 +26,18 @@ namespace 自动备份系统
             InitializeComponent();
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private void MainWindowLoadedEventHandler(object sender, RoutedEventArgs e)
         {
             //new TaskSettings("hello").Show();
-           BackupCore bc= new BackupCore();
-            bc.Backup("hello");
+           BackupCore bc= new BackupCore(this);
+           // bc.Backup("hello");
+            Thread t = new Thread(new ParameterizedThreadStart(bc.Backup));
+            t.Start("hello");
+
         }
+        //public void refreshLog(StringBuilder log)
+        //{
+        //    txtLogPanel.Text = log.ToString();
+        //}
     }
 }

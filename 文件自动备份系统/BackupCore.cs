@@ -6,16 +6,25 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Diagnostics;
 using System.Configuration;
+using System.ComponentModel;
+using System.Windows.Threading;
 
 namespace 自动备份系统
 {
     class BackupCore
     {
+        MainWindow winMain;
+        public BackupCore(MainWindow _winMain)
+        {
+            winMain = _winMain;//获取MainWindow实例
+        }
+
+
         //用于读取配置文件
         Configuration cfa = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-    
 
-        public void Backup(string name)
+        StringBuilder log = new StringBuilder();
+        public void Backup(object name)
         {
             //获取黑白名单目录
             string tempWhiteListViewItems;
@@ -42,6 +51,9 @@ namespace 自动备份系统
                     fileName.Add(new FileInfo(i).Name);
                 }
             }
+            log.Append(DateTime.Now.ToString()+DateTime.Now.Millisecond + "                共发现" + fileName.Count + "个需要检查的文件" + Environment.NewLine + Environment.NewLine);
+            refreshLog();
+
             targetDirectory = cfa.AppSettings.Settings[name + "_TargetDirectory"].Value;
             //列举目标目录文件
             listBackupedFiles(targetDirectory);
@@ -99,6 +111,7 @@ namespace 自动备份系统
                     fileLength.Add(fif.Length);//文件大小
                 }
             }
+
         }
         /// <summary>
         /// 列举目标目录里面已经备份过的文件
@@ -124,7 +137,7 @@ namespace 自动备份系统
         /// 列举源目录和目标目录不同的文件，并且把相同的但是修改时间不同的文件改名用于备份
         /// </summary>
         private void listDiferrences()
-        {
+        {//passLogDelegate passLog=new passLogDelegate(MainWindow.re)
             //列举每一个源目录里的文件，寻找目标目录是否有相同的文件
            for(int i=0;i<fileName.Count;i++)
             {
@@ -145,6 +158,8 @@ namespace 自动备份系统
                             {
                                 //修改时间相同但是大小不同，应该说是一件比较蹊跷的事，但是还是考虑一下
                                 targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension,"")+"??"+ targetFile.Extension);
+                                log.Append(DateTime.Now.ToString()+DateTime.Now.Millisecond + "                已重命名" + targetFile.FullName +"为" + targetFile.FullName.Replace(targetFile.Extension, "") + "??" + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
+
                                 //differentFilesIndex.Add(i);
                             }
                         }
@@ -154,15 +169,27 @@ namespace 自动备份系统
                             //此时要把原来的文件加上时间标签重命名
                            // FileInfo targetFile = new FileInfo(targetDirectory + "\\" + fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#") + fileName[i]);
                             targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
+                            log.Append(DateTime.Now.ToString()+DateTime.Now.Millisecond + "                已重命名" + targetFile.FullName+ "为"  + targetFile.FullName.Replace(targetFile.Extension, "") + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
+
                             //differentFilesIndex.Add(i);
                         }
-                            //backupedFileName.RemoveAt(j);
+                        //backupedFileName.RemoveAt(j);
+                        refreshLog();
+                        continue;
                     }
-                    continue;
+                    
                 }
                 
             }
+            log.Append(DateTime.Now.ToString()+DateTime.Now.Millisecond + "                共发现" + sameFilesIndex.Count + "个文件没有更新"+Environment.NewLine+Environment.NewLine);
+            refreshLog();
         }
+
+        public delegate void passLogDelegate();
+
+
+
+
         /// <summary>
         /// 备份差异项
         /// </summary>
@@ -184,8 +211,28 @@ namespace 自动备份系统
                 }
                 //复制文件
                 File.Copy(fullFileName[i], targetFile.FullName);
+                log.Append(DateTime.Now.ToString()+DateTime.Now.Millisecond+"                已复制" + fullFileName[i] + "到" + targetFile.FullName + System.Environment.NewLine + System.Environment.NewLine);
+                // winMain.txtLogPanel.Dispatcher.c
+                refreshLog();
+                
+                //winMain.refreshLog(log);
             }
 
         }
+        
+        private void refreshLog()
+        {
+            //winMain.Dispatcher.Invoke(new dLog(winMain.refreshLog), log);
+            //throw new NotImplementedException();
+            winMain.txtLogPanel.Dispatcher.Invoke(new Action(() =>
+            {
+                winMain.txtLogPanel.Text = log.ToString();
+            }));
+            
+        }
+
+        //private delegate void dLog(StringBuilder log);
+
+
     }
 }
