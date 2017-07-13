@@ -182,6 +182,7 @@ namespace 自动备份系统
                     //如果目标文件的目录不存在的话就创建一个，否则会报异常
                     targetFile.Directory.Create();
                 }
+                //复制文件
                 File.Copy(fullFileName[i], targetFile.FullName);
             }
 
