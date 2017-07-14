@@ -5,9 +5,82 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:自动备份系统"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525"
+        Title="MainWindow" Height="480" Width="1024
+        "
         Loaded="MainWindowLoadedEventHandler">
-    <Grid>
-        <TextBox x:Name="txtLogPanel" TextWrapping="Wrap" />
+
+    <!--<Window.Resources>
+        <ControlTemplate x:Key="tmpForThumb" TargetType="{x:Type Thumb}">
+            <Border>
+                <Rectangle Width="1" Name="rec" Fill="{DynamicResource {x:Static SystemColors.AppWorkspaceBrushKey}}">
+
+                </Rectangle>
+            </Border>
+            --><!--<ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="rec" Property="Fill" Value="LightGreen"/>
+                </Trigger>
+            </ControlTemplate.Triggers>--><!--
+        </ControlTemplate>
+        <Style TargetType="{x:Type GridViewColumnHeader}">
+            --><!--<Setter Property="OverridesDefaultStyle" Value="True"/>--><!--
+            
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                        <Grid Name="g" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+                            <Border Name="bd" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter Margin="2"  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                            </Border>
+                            <Thumb Name="PART_HeaderGripper" Template="{StaticResource tmpForThumb}" HorizontalAlignment="Right" Margin="0,0,0,0"/>
+                        </Grid>
+                        --><!--<ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="g" Property="Background" Value="Gray"/>
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>--><!--
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>-->
+
+
+    <Grid Margin="4">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="4"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch"   Height="5" Grid.ColumnSpan="2" Background="{DynamicResource {x:Static SystemColors.ScrollBarBrushKey}}" />
+
+        <ListView Foreground="Black" Name="lvwTasks"  ItemsSource="{Binding}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="ID" Width="32" DisplayMemberBinding="{Binding Path=Id}"/>
+                    <GridViewColumn Header="名称" Width="36" DisplayMemberBinding="{Binding Path=Name}"/>
+                    <GridViewColumn Header="源目录" Width="200" DisplayMemberBinding="{Binding Path=OriginalDirectories}"/>
+                    <GridViewColumn Header="目标目录" Width="200" DisplayMemberBinding="{Binding Path=a}"/>
+                    <GridViewColumn Header="备份间隔（秒）" Width="108" DisplayMemberBinding="{Binding Path=a}"/>
+                    <GridViewColumn Header="状态" Width="48" DisplayMemberBinding="{Binding Path=a}"/>
+                    <GridViewColumn Header="下次备份时间" Width="144" DisplayMemberBinding="{Binding Path=a}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+
+        <TabControl  Grid.Row="2">
+            <TabItem Header="当前日志">
+                <TextBox x:Name="txtLogPanel" Grid.Row="2"   />
+            </TabItem>
+            <TabItem Header="所有日志"/>
+
+        </TabControl>
     </Grid>
 </Window>

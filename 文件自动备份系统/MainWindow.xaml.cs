@@ -13,9 +13,13 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Threading;
+using System.Collections.ObjectModel;
 
 namespace 自动备份系统
 {
+
+
+
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
@@ -24,15 +28,27 @@ namespace 自动备份系统
         public MainWindow()
         {
             InitializeComponent();
+            TaskData = new ObservableCollection<object>();
+            TaskData.Add(new { a = "fsdfa" });
+
+            lvwTasks.DataContext = TaskData;
+          
         }
+
+        public ObservableCollection<object> TaskData;
+        
 
         private void MainWindowLoadedEventHandler(object sender, RoutedEventArgs e)
         {
-            //new TaskSettings("hello").Show();
-           BackupCore bc= new BackupCore(this);
-           // bc.Backup("hello");
-            Thread t = new Thread(new ParameterizedThreadStart(bc.Backup));
-            t.Start("hello");
+            // //new TaskSettings("hello").Show();
+            //BackupCore bc= new BackupCore(this);
+            //// bc.Backup("hello");
+            // Thread t = new Thread(new ParameterizedThreadStart(bc.Backup));
+            // t.Start("hello");
+
+           
+            //TaskSettings ts = new TaskSettings("hello");
+            // ts.Show();
 
         }
         //public void refreshLog(StringBuilder log)

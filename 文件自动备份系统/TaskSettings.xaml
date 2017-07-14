@@ -110,7 +110,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBox x:Name="txtInterval" Height="24"/>
-                <ComboBox x:Name="cboTimeUnit" Grid.Column="2" SelectedIndex="0">
+                <ComboBox  x:Name="cboTimeUnit" Grid.Column="2" SelectedIndex="0" Width="64" Height="24">
                     <ComboBoxItem Content="秒"/>
                     <ComboBoxItem Content="分"/>
                     <ComboBoxItem Content="时"/>
