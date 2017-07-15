@@ -9,22 +9,22 @@
         "
         Loaded="MainWindowLoadedEventHandler">
 
-    <!--<Window.Resources>
+    <Window.Resources>
         <ControlTemplate x:Key="tmpForThumb" TargetType="{x:Type Thumb}">
             <Border>
-                <Rectangle Width="1" Name="rec" Fill="{DynamicResource {x:Static SystemColors.AppWorkspaceBrushKey}}">
+                <Rectangle Width="1.5" Name="rec" Fill="{DynamicResource {x:Static SystemColors.AppWorkspaceBrushKey}}">
 
                 </Rectangle>
             </Border>
-            --><!--<ControlTemplate.Triggers>
+            <!--<ControlTemplate.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter TargetName="rec" Property="Fill" Value="LightGreen"/>
                 </Trigger>
-            </ControlTemplate.Triggers>--><!--
+            </ControlTemplate.Triggers>-->
         </ControlTemplate>
         <Style TargetType="{x:Type GridViewColumnHeader}">
-            --><!--<Setter Property="OverridesDefaultStyle" Value="True"/>--><!--
-            
+            <!--<Setter Property="OverridesDefaultStyle" Value="True"/>-->
+
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
@@ -32,19 +32,55 @@
                             <Border Name="bd" Padding="{TemplateBinding Padding}">
                                 <ContentPresenter Margin="2"  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
                             </Border>
-                            <Thumb Name="PART_HeaderGripper" Template="{StaticResource tmpForThumb}" HorizontalAlignment="Right" Margin="0,0,0,0"/>
+                            <Thumb Name="PART_HeaderGripper" Template="{StaticResource tmpForThumb}" HorizontalAlignment="Right" Margin="0"/>
                         </Grid>
-                        --><!--<ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
+                        <ControlTemplate.Triggers>
+                            <!--<Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="g" Property="Background" Value="Gray"/>
-                            </Trigger>
+                            </Trigger>-->
 
-                        </ControlTemplate.Triggers>--><!--
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-    </Window.Resources>-->
+
+
+        <Style TargetType="{x:Type ListViewItem}">
+            <Style.Setters>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ListViewItem}">
+                            <Border x:Name="bd"  
+                                BorderThickness="1"  
+                                Padding="{TemplateBinding Padding}"  
+                                SnapsToDevicePixels="True">
+                                <GridViewRowPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"  
+                                                  Margin="3"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsSelected" Value="True" >
+                                    <Trigger.Setters>
+                                        <Setter TargetName="bd" Property="Background" Value="#FFD9D9D9"/>
+                                    </Trigger.Setters>
+                                </Trigger>
+                                
+                                <Trigger Property="IsMouseOver"  Value="True" >
+                                    <Trigger.Setters>
+                                        <Setter TargetName="bd" Property="Background" Value="#FFC2C2C2"/>
+                                    </Trigger.Setters>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style.Setters>
+        </Style>
+
+
+
+    </Window.Resources>
 
 
     <Grid Margin="4">
@@ -66,10 +102,10 @@
                     <GridViewColumn Header="ID" Width="32" DisplayMemberBinding="{Binding Path=Id}"/>
                     <GridViewColumn Header="名称" Width="36" DisplayMemberBinding="{Binding Path=Name}"/>
                     <GridViewColumn Header="源目录" Width="200" DisplayMemberBinding="{Binding Path=OriginalDirectories}"/>
-                    <GridViewColumn Header="目标目录" Width="200" DisplayMemberBinding="{Binding Path=a}"/>
-                    <GridViewColumn Header="备份间隔（秒）" Width="108" DisplayMemberBinding="{Binding Path=a}"/>
-                    <GridViewColumn Header="状态" Width="48" DisplayMemberBinding="{Binding Path=a}"/>
-                    <GridViewColumn Header="下次备份时间" Width="144" DisplayMemberBinding="{Binding Path=a}"/>
+                    <GridViewColumn Header="目标目录" Width="200" DisplayMemberBinding="{Binding Path=TargetDirectories}"/>
+                    <GridViewColumn Header="备份间隔（秒）" Width="108" DisplayMemberBinding="{Binding Path=Interval}"/>
+                    <GridViewColumn Header="状态" Width="108" DisplayMemberBinding="{Binding Path=State}"/>
+                    <GridViewColumn Header="下次备份时间" Width="144" DisplayMemberBinding="{Binding Path=NextTime}"/>
                 </GridView>
             </ListView.View>
         </ListView>
@@ -82,5 +118,11 @@
             <TabItem Header="所有日志"/>
 
         </TabControl>
+
+        <StackPanel Grid.RowSpan="3" Grid.Column="2">
+            <Button Content="新建"  Width="64" Height="24" Click="NewTaskButtonClickEventHandler"/>
+
+            <Button Content="停止"  Width="64" Height="24" Click="StopThreadButtonClickEventHandler"/>
+        </StackPanel>
     </Grid>
 </Window>

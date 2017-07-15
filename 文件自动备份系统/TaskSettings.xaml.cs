@@ -178,7 +178,7 @@ namespace 自动备份系统
             string white = "";
             foreach (var i in lvwWhite.Items)
             {
-                white += i.ToString()+"??";
+                white += i.ToString()+"#Split#";
             }
 
             ChangeAppSettings("White", white);
@@ -186,7 +186,7 @@ namespace 自动备份系统
             string black = "";
             foreach (var i in lvwBlack.Items)
             {
-                black += i.ToString() + "??";
+                black += i.ToString() + "#Split#";
             }
 
             ChangeAppSettings("Black", black);
@@ -211,7 +211,9 @@ namespace 自动备份系统
                 MessageBox.Show("输入的时间有误！");
             }
 
+            cfa.AppSettings.Settings["Items"].Value += txtName.Text + "#Split#";
             cfa.Save();
+            this.Close();
         }
 
         private void ChangeAppSettings(string key,string targetValue)
@@ -231,13 +233,13 @@ namespace 自动备份系统
         {
             string tempWhiteListViewItems;
             tempWhiteListViewItems = cfa.AppSettings.Settings[name + "_White"] != null ? cfa.AppSettings.Settings[name + "_White"].Value : "";
-            foreach (var i in tempWhiteListViewItems.Split(new string[] { "??" }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var i in tempWhiteListViewItems.Split(new string[] { "#Split#" }, StringSplitOptions.RemoveEmptyEntries))
             {
                 lvwWhite.Items.Add(i);
             }
             string tempBlackListViewItems;
             tempBlackListViewItems = cfa.AppSettings.Settings[name + "_Black"] != null ? cfa.AppSettings.Settings[name + "_Black"].Value : "";
-            foreach (var i in tempBlackListViewItems.Split(new string[] { "??" }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var i in tempBlackListViewItems.Split(new string[] { "#Split#" }, StringSplitOptions.RemoveEmptyEntries))
             {
                 lvwBlack.Items.Add(i);
             }
