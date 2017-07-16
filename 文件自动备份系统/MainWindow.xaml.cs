@@ -38,23 +38,23 @@ namespace 自动备份系统
         public MainWindow()
         {
             InitializeComponent();
-            TaskData = new ObservableCollection<TaskInfo>();
+            TaskData = new ObservableCollection<TaskInfo>();//实例化数据
             //TaskData.Add(new { Name = "NextTime",NextTime = "fsdfa" });
 
-            lvwTasks.DataContext = TaskData;
+            lvwTasks.DataContext = TaskData;//绑定数据
 
         }
-        public StringBuilder log = new StringBuilder();
-        Thread backupThread;
-        int currentTaskIndex;
-        public ObservableCollection<TaskInfo> TaskData;
-        Configuration cfa = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-        public List<string> itemsName = new List<string>();
-        public List<int> itemsLastTime;
-        System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
-        public int CurrentBackupThreads = 0;
-        public string CurrentFileCount = "";
-
+        public StringBuilder log = new StringBuilder();//“当前日志”中显示的内容，由备份线程控制
+        Thread backupThread;//备份线程
+        int currentTaskIndex;//正在进行哪一个任务的备份
+        public ObservableCollection<TaskInfo> TaskData;//需要绑定的数据
+        Configuration cfa = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);//配置项
+        public List<string> itemsName = new List<string>();//任务名称列表
+        public List<int> itemsLastTime = new List<int>();//任务距离下一次时间列表
+        System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();//定时器
+        public int CurrentBackupThreads = 0;//用于判断是否正在备份
+        public string CurrentFileCount = "";//用于显示状态，由备份线程控制
+        bool pauseTimer = false;
         private void MainWindowLoadedEventHandler(object sender, RoutedEventArgs e)
         {
 
@@ -69,40 +69,47 @@ namespace 自动备份系统
         private void timer_Tick(object sender, EventArgs e)
         {
 
-
-
-            //TaskData[i].State = "就绪，剩余"+itemsLastTime[i].ToString()+"秒";
-
             for (int i = 0; i < itemsName.Count; i++)
             {
-                
-                if (itemsLastTime[i] == 0)
+
+                if (itemsLastTime[i] == 0)//如果时间到了
                 {
                     if (CurrentBackupThreads == 0)
                     {
                         // itemsLastTime[i] = int.Parse(TaskData[i].Interval);
-                        itemsLastTime[i] = -1;
-                        CurrentBackupThreads++;
+                        itemsLastTime[i] = -1;//标记正在备份
+                        CurrentBackupThreads++;//标记有备份线程运行中
                         BackupCore bc = new BackupCore(this);
                         backupThread = new Thread(new ParameterizedThreadStart(bc.Backup));
                         backupThread.Start(itemsName[i]);
                         currentTaskIndex = i;
+                        TaskData[i].State = "正在准备";
                     }
-                    
-                }
-                else if(itemsLastTime[i]>0)
-                {
+                    else
+                    {
+                        TaskData[i].State = "等待中";
 
-                    itemsLastTime[i]--;
-                    TaskData[i].State = "剩余" + itemsLastTime[i].ToString() + "秒";
-                    
+                    }
+                }
+                else if (itemsLastTime[i] > 0)
+                {
+                    if (!pauseTimer)
+                    {
+                        itemsLastTime[i]--;
+                        TaskData[i].State = "剩余" + itemsLastTime[i].ToString() + "秒";
+                    }
+
                 }
                 else
                 {
                     TaskData[i].State = CurrentFileCount;
-                    txtLogPanel.Text = log.ToString();
-                    txtLogPanel.ScrollToEnd();
+                    if (!txtLogPanel.IsFocused)
+                    {
+                        txtLogPanel.ScrollToEnd();
+                    }
                 }
+                txtLogPanel.Text = log.ToString();
+           
                 lvwTasks.Items.Refresh();
             }
 
@@ -112,9 +119,7 @@ namespace 自动备份系统
 
         private void RefreshListView()
         {
-            TaskData.Clear();//清除绑定的数据
-            itemsName.Clear();//清除Task项目列表
-            cfa = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);//重新初始化config文件
+            //reinitialize();
             if (cfa.AppSettings.Settings["Items"] != null)//如果不是第一次运行的话
             {
                 foreach (var i in cfa.AppSettings.Settings["Items"].Value.Split(new string[] { "#Split#" }, StringSplitOptions.RemoveEmptyEntries))
@@ -136,7 +141,7 @@ namespace 自动备份系统
                     });
 
 
-                    itemsLastTime = new List<int>();
+
                     itemsLastTime.Add(int.Parse(cfa.AppSettings.Settings[i + "_Interval"].Value));
 
                 }
@@ -150,9 +155,23 @@ namespace 自动备份系统
 
         private void NewTaskButtonClickEventHandler(object sender, RoutedEventArgs e)
         {
+            timer.Stop();
             new TaskSettings("").ShowDialog();
+            reinitialize();
             RefreshListView();
-            Debug.WriteLine(TaskData[0].ToString());
+            timer.Start();
+        }
+
+        private void reinitialize()
+        {
+            if (backupThread != null)
+            {
+                backupThread.Abort();
+            }
+            TaskData.Clear();//清除绑定的数据
+            itemsName.Clear();//清除Task项目列表
+            itemsLastTime.Clear();
+            cfa = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);//重新初始化config文件
         }
 
         private void StopThreadButtonClickEventHandler(object sender, RoutedEventArgs e)
@@ -160,6 +179,36 @@ namespace 自动备份系统
             backupThread.Abort();
             CurrentBackupThreads = 0;
             itemsLastTime[currentTaskIndex] = int.Parse(TaskData[currentTaskIndex].Interval);
+        }
+
+        private void PauseTimerButtonClickEventHandler(object sender, RoutedEventArgs e)
+        {
+            pauseTimer = !pauseTimer;
+        }
+
+        private void txtLogPanel_MouseLeave(object sender, MouseEventArgs e)
+        {
+            txtLogPanel.MoveFocus( new TraversalRequest(FocusNavigationDirection.Next));
+        }
+
+        private void ForceToExecuteButtonClickEventHandler(object sender, RoutedEventArgs e)
+        {
+            itemsLastTime[lvwTasks.SelectedIndex] = 0;
+        }
+
+        private void DeleteTaskButtonClickEventHandler(object sender, RoutedEventArgs e)
+        {
+            int index = lvwTasks.SelectedIndex;
+            TaskData.RemoveAt(index);
+            cfa.AppSettings.Settings["Items"].Value = cfa.AppSettings.Settings["Items"].Value.Replace(itemsName[index] + "#Split#", "");
+            foreach (var i in new string[] {"White","Black","TargetDirectory","Interval" })
+            {
+              
+                cfa.AppSettings.Settings.Remove(itemsName[index] + "_" + i);
+            }
+            cfa.Save();
+            reinitialize();
+            RefreshListView();
         }
         //public void refreshLog(StringBuilder log)
         //{

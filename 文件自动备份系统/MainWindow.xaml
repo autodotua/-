@@ -105,7 +105,6 @@
                     <GridViewColumn Header="目标目录" Width="200" DisplayMemberBinding="{Binding Path=TargetDirectories}"/>
                     <GridViewColumn Header="备份间隔（秒）" Width="108" DisplayMemberBinding="{Binding Path=Interval}"/>
                     <GridViewColumn Header="状态" Width="108" DisplayMemberBinding="{Binding Path=State}"/>
-                    <GridViewColumn Header="下次备份时间" Width="144" DisplayMemberBinding="{Binding Path=NextTime}"/>
                 </GridView>
             </ListView.View>
         </ListView>
@@ -113,16 +112,22 @@
 
         <TabControl  Grid.Row="2">
             <TabItem Header="当前日志">
-                <TextBox x:Name="txtLogPanel" Grid.Row="2"   />
+                <TextBox x:Name="txtLogPanel" Grid.Row="2" MouseLeave="txtLogPanel_MouseLeave"   />
             </TabItem>
             <TabItem Header="所有日志"/>
 
         </TabControl>
 
         <StackPanel Grid.RowSpan="3" Grid.Column="2">
-            <Button Content="新建"  Width="64" Height="24" Click="NewTaskButtonClickEventHandler"/>
-
-            <Button Content="停止"  Width="64" Height="24" Click="StopThreadButtonClickEventHandler"/>
+            <Button Content="新建任务"  Width="64" Height="24" Click="NewTaskButtonClickEventHandler"/>
+            <TextBlock/>
+            <Button Content="删除任务"  Width="64" Height="24" Click="DeleteTaskButtonClickEventHandler"/>
+            <TextBlock/>
+            <Button Content="暂停计时"  Width="64" Height="24" Click="PauseTimerButtonClickEventHandler"/>
+            <TextBlock/>
+            <Button Content="停止所有"  Width="64" Height="24" Click="StopThreadButtonClickEventHandler"/>
+            <TextBlock/>
+            <Button Content="强制执行"  Width="64" Height="24" Click="ForceToExecuteButtonClickEventHandler"/>
         </StackPanel>
     </Grid>
 </Window>
