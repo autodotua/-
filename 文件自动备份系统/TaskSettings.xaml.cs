@@ -2,8 +2,7 @@
 using System.Windows;
 using System.IO;
 using System.Configuration;
-
-
+using System.Windows.Media.Imaging;
 
 namespace 自动备份系统
 {
@@ -231,6 +230,13 @@ namespace 自动备份系统
 
         private void WindowLoadedEventHandler(object sender, RoutedEventArgs e)
         {
+            string tempFileName = System.IO.Path.GetTempFileName();
+            FileStream fs = new FileStream(tempFileName, FileMode.Create);
+            Properties.Resources.settings.Save(fs);
+            fs.Close();
+            this.Icon = new BitmapImage(new Uri(tempFileName));
+
+
             string tempWhiteListViewItems;
             tempWhiteListViewItems = cfa.AppSettings.Settings[name + "_White"] != null ? cfa.AppSettings.Settings[name + "_White"].Value : "";
             foreach (var i in tempWhiteListViewItems.Split(new string[] { "#Split#" }, StringSplitOptions.RemoveEmptyEntries))

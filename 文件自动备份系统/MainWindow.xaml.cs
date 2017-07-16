@@ -16,6 +16,7 @@ using System.Threading;
 using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Diagnostics;
+using System.IO;
 
 namespace 自动备份系统
 {
@@ -55,15 +56,64 @@ namespace 自动备份系统
         public int CurrentBackupThreads = 0;//用于判断是否正在备份
         public string CurrentFileCount = "";//用于显示状态，由备份线程控制
         bool pauseTimer = false;
+        private System.Windows.Forms.NotifyIcon notifyIcon;
+
+
         private void MainWindowLoadedEventHandler(object sender, RoutedEventArgs e)
         {
+            string tempFileName = System.IO.Path.GetTempFileName();
+            FileStream fs = new FileStream(tempFileName, FileMode.Create);
+            Properties.Resources.icon.Save(fs);
+            fs.Close();
+
+            //设置托盘的各个属性
+            notifyIcon = new System.Windows.Forms.NotifyIcon();
+            notifyIcon.BalloonTipText = "设置界面在托盘";
+            notifyIcon.Text = "文件自动备份系统";
+            notifyIcon.Icon = new System.Drawing.Icon(tempFileName);
+            notifyIcon.Visible = true;
+
+            notifyIcon.MouseClick += new System.Windows.Forms.MouseEventHandler(NotifyIconClickEventHandler);
+
+            System.Windows.Forms.MenuItem miExit = new System.Windows.Forms.MenuItem("退出");
+            miExit.Click += new EventHandler(delegate(object sender3,EventArgs e3) 
+            {
+                notifyIcon.Visible = false;
+                System.Windows.Application.Current.Shutdown();
+            });
+            System.Windows.Forms.MenuItem miPause = new System.Windows.Forms.MenuItem("暂停计时");
+            miPause.Click += new EventHandler(delegate(object sender2, EventArgs e2) { pauseTimer = !pauseTimer; });
+   
+            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] {miPause, miExit };
+            notifyIcon.ContextMenu = new System.Windows.Forms.ContextMenu(childen);
+            this.Icon = new BitmapImage(new Uri(tempFileName));
+
+
+
 
             RefreshListView();
             timer.Interval = new TimeSpan(0, 0, 1);
             timer.Tick += new EventHandler(timer_Tick);
             timer.Start();
-            //TaskData[0].State = "就绪，剩余" + itemsLastTime[0].ToString() + "秒";
 
+        }
+
+
+
+        private void NotifyIconClickEventHandler(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                if (this.Visibility == Visibility.Visible)
+                {
+                    this.Visibility = Visibility.Hidden;
+                }
+                else
+                {
+                    this.Visibility = Visibility.Visible;
+                    this.Activate();
+                }
+            }
         }
 
         private void timer_Tick(object sender, EventArgs e)
@@ -85,13 +135,12 @@ namespace 自动备份系统
                         currentTaskIndex = i;
                         TaskData[i].State = "正在准备";
                     }
-                    else
+                    else//如果正在备份其他的东西
                     {
                         TaskData[i].State = "等待中";
-
                     }
                 }
-                else if (itemsLastTime[i] > 0)
+                else if (itemsLastTime[i] > 0)//如果还有时间
                 {
                     if (!pauseTimer)
                     {
@@ -100,7 +149,7 @@ namespace 自动备份系统
                     }
 
                 }
-                else
+                else//如果本项正在备份
                 {
                     TaskData[i].State = CurrentFileCount;
                     if (!txtLogPanel.IsFocused)
@@ -116,7 +165,9 @@ namespace 自动备份系统
 
 
         }
-
+        /// <summary>
+        /// 刷新列表
+        /// </summary>
         private void RefreshListView()
         {
             //reinitialize();
@@ -136,7 +187,7 @@ namespace 自动备份系统
                         Name = i,
                         OriginalDirectories = (cfa.AppSettings.Settings[i + "_White"].Value.Remove(cfa.AppSettings.Settings[i + "_White"].Value.Length - 7, 7) + "，除了" + cfa.AppSettings.Settings[i + "_Black"].Value).Replace("#Split#", "、"),
                         TargetDirectories = cfa.AppSettings.Settings[i + "_TargetDirectory"].Value,
-                        Interval = cfa.AppSettings.Settings[i + "_Interval"].Value,
+                        Interval = new TimeSpan(0, 0, int.Parse(cfa.AppSettings.Settings[i + "_Interval"].Value)).ToString(),
                         State = "就绪"
                     });
 
@@ -209,6 +260,43 @@ namespace 自动备份系统
             cfa.Save();
             reinitialize();
             RefreshListView();
+        }
+
+        private void ExitButtonClickEventHandler(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+        private void EditTaskButtonClickEventHandler(object sender, RoutedEventArgs e)
+        {
+            if (lvwTasks.SelectedIndex != -1)
+                 {
+                timer.Stop();
+                new TaskSettings(itemsName[lvwTasks.SelectedIndex]).ShowDialog();
+                reinitialize();
+                RefreshListView();
+                timer.Start();
+            }
+            else
+            {
+                MessageBox.Show("未选择任何任务！");
+            }
+        }
+        private void MainWindowClosingEventHandler(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            e.Cancel = true;
+            this.Visibility = Visibility.Hidden;
+        }
+
+        private void lvwTasks_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (lvwTasks.SelectedIndex != -1)
+            {
+                timer.Stop();
+                new TaskSettings(itemsName[lvwTasks.SelectedIndex]).ShowDialog();
+                reinitialize();
+                RefreshListView();
+                timer.Start();
+            }
         }
         //public void refreshLog(StringBuilder log)
         //{

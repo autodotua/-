@@ -5,9 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:自动备份系统"
         mc:Ignorable="d"
-        Title="MainWindow" Height="480" Width="1024
-        "
-        Loaded="MainWindowLoadedEventHandler">
+        Title="文件自动备份系统" Height="480" Width="1024 "
+        Loaded="MainWindowLoadedEventHandler"
+        Closing="MainWindowClosingEventHandler">
 
     <Window.Resources>
         <ControlTemplate x:Key="tmpForThumb" TargetType="{x:Type Thumb}">
@@ -96,7 +96,7 @@
         </Grid.ColumnDefinitions>
         <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch"   Height="5" Grid.ColumnSpan="2" Background="{DynamicResource {x:Static SystemColors.ScrollBarBrushKey}}" />
 
-        <ListView Foreground="Black" Name="lvwTasks"  ItemsSource="{Binding}">
+        <ListView Foreground="Black" Name="lvwTasks"  ItemsSource="{Binding}" PreviewMouseDoubleClick="lvwTasks_PreviewMouseDoubleClick">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="ID" Width="32" DisplayMemberBinding="{Binding Path=Id}"/>
@@ -121,6 +121,8 @@
         <StackPanel Grid.RowSpan="3" Grid.Column="2">
             <Button Content="新建任务"  Width="64" Height="24" Click="NewTaskButtonClickEventHandler"/>
             <TextBlock/>
+            <Button Content="编辑任务"  Width="64" Height="24" Click="EditTaskButtonClickEventHandler"/>
+            <TextBlock/>
             <Button Content="删除任务"  Width="64" Height="24" Click="DeleteTaskButtonClickEventHandler"/>
             <TextBlock/>
             <Button Content="暂停计时"  Width="64" Height="24" Click="PauseTimerButtonClickEventHandler"/>
@@ -128,6 +130,10 @@
             <Button Content="停止所有"  Width="64" Height="24" Click="StopThreadButtonClickEventHandler"/>
             <TextBlock/>
             <Button Content="强制执行"  Width="64" Height="24" Click="ForceToExecuteButtonClickEventHandler"/>
+            <TextBlock/>
+
         </StackPanel>
+        <Button Content="完全退出"  Width="64" Height="24" Click="ExitButtonClickEventHandler" Background="#FFFFD9D9" Grid.Row="2" Grid.Column="2" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+
     </Grid>
 </Window>

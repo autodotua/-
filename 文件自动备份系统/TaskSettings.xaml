@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:自动备份系统"
         mc:Ignorable="d"
-        Title="TaskSettings" Height="500" Width="600"
+        Title="任务设置" Height="500" Width="600"
         Loaded="WindowLoadedEventHandler">
     <Grid Margin="4">
         <Grid >
