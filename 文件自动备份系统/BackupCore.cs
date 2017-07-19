@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Configuration;
 using System.ComponentModel;
 using System.Windows.Threading;
+using System.Xml;
 
 namespace 自动备份系统
 {
@@ -17,18 +18,45 @@ namespace 自动备份系统
         public BackupCore(MainWindow _winMain)
         {
             winMain = _winMain;//获取MainWindow实例
-        }
+ 
+            //if(!File.Exists("log.xml"))
+            //{
+            //    XmlDeclaration xdec = xml.CreateXmlDeclaration("1.0", "UTF-8", null);
+            //    xml.AppendChild(xdec);
+            //    xml.AppendChild(xml.CreateElement("文件自动备份系统日志"));
+            //}
+            //else
+            //{
+                xml.Load("log.xml");
+           // }
 
+        }
+        XmlDocument xml = new XmlDocument();
+        XmlNode currentLog;
         string taskName;
         //用于读取配置文件
         Configuration cfa = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-
+        int logIndex = 0;
+        private void appendLog(string value)
+        {
+            logIndex++;
+            XmlElement xe = xml.CreateElement("log"+logIndex.ToString());
+            xe.SetAttribute("Time", DateTime.Now.ToString() + "." + DateTime.Now.Millisecond);
+            xe.SetAttribute("Event", value);
+            currentLog.AppendChild(xe);
+            winMain.log.Append("[" + taskName + "]"+DateTime.Now.ToString() + "." + DateTime.Now.Millisecond +"                 "+value + System.Environment.NewLine + System.Environment.NewLine);
+        }
 
         public void Backup(object name)
         {
             taskName = (string)name;
-            winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                开始备份" + System.Environment.NewLine + System.Environment.NewLine);
 
+            XmlElement root = xml.DocumentElement;
+            currentLog = xml.CreateElement(taskName + "--" + DateTime.Now.ToString().Replace("/", "-").Replace(" ", "_").Replace(":", "-"));
+            root.AppendChild(currentLog);
+            xml.Save("log.xml");
+
+            appendLog("开始备份");
             //获取黑白名单目录
             string tempWhiteListViewItems;
             tempWhiteListViewItems = cfa.AppSettings.Settings[name + "_White"] != null ? cfa.AppSettings.Settings[name + "_White"].Value : "";
@@ -54,9 +82,7 @@ namespace 自动备份系统
                     fileName.Add(new FileInfo(i).Name);
                 }
             }
-            winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                共发现" + fileName.Count + "个需要检查的文件" + Environment.NewLine + Environment.NewLine);
-            // refreshLog();
-
+            appendLog("共发现" + fileName.Count + "个需要检查的文件");
             targetDirectory = cfa.AppSettings.Settings[name + "_TargetDirectory"].Value;
             //列举目标目录文件
             listBackupedFiles(targetDirectory);
@@ -70,7 +96,7 @@ namespace 自动备份系统
             //{
             //    Debug.WriteLine(i);
             //}
-
+            xml.Save("log.xml");
         }
 
 
@@ -173,7 +199,8 @@ namespace 自动备份系统
                             {
                                 //修改时间相同但是大小不同，应该说是一件比较蹊跷的事，但是还是考虑一下
                                 targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension);
-                                winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
+                                appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension);
+                                //winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
                             }
                         }
                         else
@@ -181,7 +208,8 @@ namespace 自动备份系统
                             //如果文件名一样但是修改时间变新了，说明后来修改过文件
                             //此时要把原来的文件加上时间标签重命名
                             targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
-                            winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
+                            appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
+                            //winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
                         }
                         continue;
                     }
@@ -189,7 +217,8 @@ namespace 自动备份系统
                 }
 
             }
-            winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                共发现" + sameFilesIndex.Count + "个文件没有更新" + Environment.NewLine + Environment.NewLine);
+            appendLog("共发现" + sameFilesIndex.Count + "个文件没有更新");
+           // winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                共发现" + sameFilesIndex.Count + "个文件没有更新" + Environment.NewLine + Environment.NewLine);
             //refreshLog();
         }
 
@@ -212,8 +241,8 @@ namespace 自动备份系统
                         {
                             FileInfo targetFile = new FileInfo(targetDirectory + backupedFileName[i]);
                             targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
-                            winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
-
+                            //winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
+                            appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
                             continue;
                         }
                     }
@@ -248,7 +277,8 @@ namespace 自动备份系统
                 }
                 //复制文件
                 File.Copy(fullFileName[i], targetFile.FullName);
-                winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已复制" + fullFileName[i] + "到" + targetFile.FullName + System.Environment.NewLine + System.Environment.NewLine);
+                //winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已复制" + fullFileName[i] + "到" + targetFile.FullName + System.Environment.NewLine + System.Environment.NewLine);
+                appendLog("已复制" + fullFileName[i] + "到" + targetFile.FullName);
                 // winMain.txtLogPanel.Dispatcher.c
                 //refreshLog();
                 winMain.CurrentFileCount = "正在复制：" + fileCount.ToString() + "/" + (fileName.Count - sameFilesIndex.Count).ToString();
@@ -256,8 +286,8 @@ namespace 自动备份系统
             winMain.CurrentBackupThreads = 0;
             //winMain.refreshLog(log);
             winMain.itemsLastTime[winMain.itemsName.IndexOf(taskName)] = int.Parse(cfa.AppSettings.Settings[taskName + "_Interval"].Value);
-            winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                备份完成，复制了" + (fileName.Count - sameFilesIndex.Count).ToString() + "个文件" + System.Environment.NewLine + System.Environment.NewLine);
-
+            // winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                备份完成，复制了" + (fileName.Count - sameFilesIndex.Count).ToString() + "个文件" + System.Environment.NewLine + System.Environment.NewLine);
+            appendLog("备份完成，复制了" + (fileName.Count - sameFilesIndex.Count).ToString() + "个文件");
         }
 
     }

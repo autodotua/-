@@ -17,6 +17,7 @@ using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
+using System.Xml;
 
 namespace 自动备份系统
 {
@@ -31,6 +32,13 @@ namespace 自动备份系统
         public string State { get; internal set; }
     }
 
+    public class XMLLog
+    {    
+        public int Time { get; internal set; }
+        public string Event { get; internal set; }
+
+    }
+
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
@@ -39,16 +47,19 @@ namespace 自动备份系统
         public MainWindow()
         {
             InitializeComponent();
-            TaskData = new ObservableCollection<TaskInfo>();//实例化数据
+            //TaskData = new ObservableCollection<TaskInfo>();//实例化数据
             //TaskData.Add(new { Name = "NextTime",NextTime = "fsdfa" });
 
             lvwTasks.DataContext = TaskData;//绑定数据
+            lvwLog.DataContext = log;
 
         }
         public StringBuilder log = new StringBuilder();//“当前日志”中显示的内容，由备份线程控制
         Thread backupThread;//备份线程
         int currentTaskIndex;//正在进行哪一个任务的备份
-        public ObservableCollection<TaskInfo> TaskData;//需要绑定的数据
+        public ObservableCollection<TaskInfo> TaskData= new ObservableCollection<TaskInfo>();//需要绑定的数据
+        public ObservableCollection<XMLLog> LogData = new ObservableCollection<XMLLog>();
+
         Configuration cfa = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);//配置项
         public List<string> itemsName = new List<string>();//任务名称列表
         public List<int> itemsLastTime = new List<int>();//任务距离下一次时间列表
@@ -88,7 +99,7 @@ namespace 自动备份系统
             notifyIcon.ContextMenu = new System.Windows.Forms.ContextMenu(childen);
             this.Icon = new BitmapImage(new Uri(tempFileName));
 
-
+            loadLog();
 
 
             RefreshListView();
@@ -97,8 +108,6 @@ namespace 自动备份系统
             timer.Start();
 
         }
-
-
 
         private void NotifyIconClickEventHandler(object sender, System.Windows.Forms.MouseEventArgs e)
         {
@@ -115,6 +124,32 @@ namespace 自动备份系统
                 }
             }
         }
+
+        XmlDocument xml = new XmlDocument();
+        private void loadLog()
+        {
+           
+            XmlNode currentLog;
+            if (!File.Exists("log.xml"))
+            {
+                XmlDeclaration xdec = xml.CreateXmlDeclaration("1.0", "UTF-8", null);
+                xml.AppendChild(xdec);
+                xml.AppendChild(xml.CreateElement("文件自动备份系统日志"));
+            }
+            else
+            {
+                xml.Load("log.xml");
+            }
+
+            XmlElement root = xml.DocumentElement;
+            for(int i=0;i<root.ChildNodes.Count;i++)
+            {
+                
+            }
+            xml.Save("log.xml");
+
+        }
+
 
         private void timer_Tick(object sender, EventArgs e)
         {

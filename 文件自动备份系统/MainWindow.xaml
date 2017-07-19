@@ -99,12 +99,12 @@
         <ListView Foreground="Black" Name="lvwTasks"  ItemsSource="{Binding}" PreviewMouseDoubleClick="lvwTasks_PreviewMouseDoubleClick">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="ID" Width="32" DisplayMemberBinding="{Binding Path=Id}"/>
-                    <GridViewColumn Header="名称" Width="36" DisplayMemberBinding="{Binding Path=Name}"/>
-                    <GridViewColumn Header="源目录" Width="200" DisplayMemberBinding="{Binding Path=OriginalDirectories}"/>
-                    <GridViewColumn Header="目标目录" Width="200" DisplayMemberBinding="{Binding Path=TargetDirectories}"/>
+                    <GridViewColumn Header="ID" Width="40" DisplayMemberBinding="{Binding Path=Id}"/>
+                    <GridViewColumn Header="名称" Width="80" DisplayMemberBinding="{Binding Path=Name}"/>
+                    <GridViewColumn Header="源目录" Width="240" DisplayMemberBinding="{Binding Path=OriginalDirectories}"/>
+                    <GridViewColumn Header="目标目录" Width="240" DisplayMemberBinding="{Binding Path=TargetDirectories}"/>
                     <GridViewColumn Header="备份间隔（秒）" Width="108" DisplayMemberBinding="{Binding Path=Interval}"/>
-                    <GridViewColumn Header="状态" Width="108" DisplayMemberBinding="{Binding Path=State}"/>
+                    <GridViewColumn Header="状态" Width="200" DisplayMemberBinding="{Binding Path=State}"/>
                 </GridView>
             </ListView.View>
         </ListView>
@@ -114,7 +114,22 @@
             <TabItem Header="当前日志">
                 <TextBox x:Name="txtLogPanel" Grid.Row="2" MouseLeave="txtLogPanel_MouseLeave"   />
             </TabItem>
-            <TabItem Header="所有日志"/>
+            <TabItem Header="所有日志">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="4"/>
+                        <ColumnDefinition Width="4*"/>
+                    </Grid.ColumnDefinitions>
+                    <ListBox Name="lbxLogList"/>
+                    <ListView Name="lvwLog"  ItemsSource="{Binding}"  Grid.Column="2">
+                            <GridViewColumn Header="时间" Width="40" DisplayMemberBinding="{Binding Path=Time}"/>
+                            <GridViewColumn Header="事件" Width="80" DisplayMemberBinding="{Binding Path=Event}"/>
+
+                        </ListView>
+                    
+                </Grid>
+            </TabItem>
 
         </TabControl>
 
