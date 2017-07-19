@@ -63,6 +63,8 @@ namespace 自动备份系统
             //列举差异项
             listDiferrences();
             //将不同的部分复制到目标文件夹
+            listOldBackupedFilesAndRename();
+
             moveDiferrences();
             //foreach (var i in fileName)
             //{
@@ -70,7 +72,6 @@ namespace 自动备份系统
             //}
 
         }
-
 
 
         string targetDirectory;
@@ -123,29 +124,32 @@ namespace 自动备份系统
         /// <param name="path"></param>
         private void listBackupedFiles(string path)
         {
-            if(Directory.Exists(path))
+            if (Directory.Exists(path))
             {
-    foreach (var i in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
-            {
-                //n++;
-                backupedFileName.Add(i.Replace(path, ""));
-                FileInfo fif = new FileInfo(i);
-                backupedFileLastWriteTime.Add(fif.LastWriteTimeUtc);
-                backupedFileLength.Add(fif.Length);
-            }
+                foreach (var i in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
+                {
+                    //n++;
+                    backupedFileName.Add(i.Replace(path, ""));
+                    FileInfo fif = new FileInfo(i);
+                    backupedFileLastWriteTime.Add(fif.LastWriteTimeUtc);
+                    backupedFileLength.Add(fif.Length);
+                }
             }
             //int n = 0;
-        
+
         }
 
         //List<int> differentFilesIndex = new List<int>();
         List<int> sameFilesIndex = new List<int>();
+        List<int> sameBackupedFilesIndex = new List<int>();
+        List<string> fileDirectories = new List<string>();
         /// <summary>
         /// 列举源目录和目标目录不同的文件，并且把相同的但是修改时间不同的文件改名用于备份
         /// </summary>
         private void listDiferrences()
-        {//passwinMain.logDelegate passwinMain.log=new passwinMain.logDelegate(MainWindow.re)
-         //列举每一个源目录里的文件，寻找目标目录是否有相同的文件
+        {
+            int n = backupedFileName.Count;
+            //列举每一个源目录里的文件，寻找目标目录是否有相同的文件
             for (int i = 0; i < fileName.Count; i++)
             {
                 winMain.CurrentFileCount = "正在查找：" + i.ToString() + "/" + fileName.Count.ToString();
@@ -154,6 +158,7 @@ namespace 自动备份系统
                 {
                     FileInfo targetFile = new FileInfo(targetDirectory + "\\" + fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#") + fileName[i]);
                     //                                               目标目录                             源目录                替换掉不同的部分              把冒号替换             把斜杠替换    加上名字
+                    if (!fileDirectories.Contains(fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#"))) { fileDirectories.Add(fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#")); }
                     if (backupedFileName[j].EndsWith(fileName[i]))//如果找到相同文件名的文件
                     {
                         if (fileLastWriteTime[i] == backupedFileLastWriteTime[j])//如果修改时间相同
@@ -162,28 +167,22 @@ namespace 自动备份系统
                             {
                                 sameFilesIndex.Add(i);
                                 //文件名、文件大小和文件修改时间全部相同，几乎可以证明两个文件相同
+                                sameBackupedFilesIndex.Add(j);
                             }
                             else
                             {
                                 //修改时间相同但是大小不同，应该说是一件比较蹊跷的事，但是还是考虑一下
-                                targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#Split#" + targetFile.Extension);
-                                winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#Split#" + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
-
-                                //differentFilesIndex.Add(i);
+                                targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension);
+                                winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
                             }
                         }
                         else
                         {
                             //如果文件名一样但是修改时间变新了，说明后来修改过文件
                             //此时要把原来的文件加上时间标签重命名
-                            // FileInfo targetFile = new FileInfo(targetDirectory + "\\" + fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#") + fileName[i]);
-                            targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
-                            winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
-
-                            //differentFilesIndex.Add(i);
+                            targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
+                            winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
                         }
-                        //backupedFileName.RemoveAt(j);
-                        // refreshLog();
                         continue;
                     }
 
@@ -194,7 +193,34 @@ namespace 自动备份系统
             //refreshLog();
         }
 
-        public delegate void passLogDelegate();
+        //public delegate void passLogDelegate();
+
+
+            /// <summary>
+            /// 列举并且重命名那些旧的备份
+            /// </summary>
+        private void listOldBackupedFilesAndRename()
+        {
+
+            for (int i = 0; i < backupedFileName.Count; i++)//循环每一个备份文件
+            {
+                if (!sameBackupedFilesIndex.Contains(i))//如果文件发生了改变
+                {
+                    foreach (var j in fileDirectories)//循环每一个备份目录
+                    {
+                        if (backupedFileName[i].Contains(j) && !backupedFileName[i].Contains("OldBackupedFile#"))//如果确实是在备份目录下的文件（为了防止把其他文件改掉）而且是没有改过名的文件
+                        {
+                            FileInfo targetFile = new FileInfo(targetDirectory + backupedFileName[i]);
+                            targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
+                            winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
+
+                            continue;
+                        }
+                    }
+
+                }
+            }
+        }
 
 
 
@@ -233,27 +259,6 @@ namespace 自动备份系统
             winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                备份完成，复制了" + (fileName.Count - sameFilesIndex.Count).ToString() + "个文件" + System.Environment.NewLine + System.Environment.NewLine);
 
         }
-
-        //private void refreshLog()
-        //{
-        //    winMain.txtLogPanel.Dispatcher.Invoke(new Action(() =>
-        //    {
-        //        winMain.txtLogPanel.Text = winMain.log.ToString();
-        //        //winMain.txtLogPanel.Select(winMain.txtLogPanel.Text.Length, 0);
-        //        winMain.txtLogPanel.ScrollToEnd();
-        //    }));
-
-        //}
-
-        //private void refreshCurrentBackupThreads()
-        //{
-        //    winMain.CurrentBackupThreads.Dispatcher.Invoke(new Action(() =>
-        //    {
-        //        winMain.txtLogPanel.Text = log.ToString();
-        //    }));
-
-        //}
-
 
     }
 }

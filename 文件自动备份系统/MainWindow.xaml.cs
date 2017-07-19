@@ -244,6 +244,7 @@ namespace 自动备份系统
 
         private void ForceToExecuteButtonClickEventHandler(object sender, RoutedEventArgs e)
         {
+            
             itemsLastTime[lvwTasks.SelectedIndex] = 0;
         }
 
