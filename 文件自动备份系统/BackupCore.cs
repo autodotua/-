@@ -88,15 +88,16 @@ namespace 自动备份系统
             listBackupedFiles(targetDirectory);
             //列举差异项
             listDiferrences();
-            //将不同的部分复制到目标文件夹
+            //列举并且重命名源文件夹消失的部分
             listOldBackupedFilesAndRename();
-
+            //将不同的部分复制到目标文件夹
             moveDiferrences();
-            //foreach (var i in fileName)
-            //{
-            //    Debug.WriteLine(i);
-            //}
+           //保存日志
             xml.Save("log.xml");
+            //刷新日志
+            winMain.refreshLog();
+            //winMain.lbxLogList.Dispatcher.Invoke(new Action(() =>{winMain.lbxLogList.Items.Refresh(); }));
+
         }
 
 

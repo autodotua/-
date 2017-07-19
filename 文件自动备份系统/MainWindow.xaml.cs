@@ -34,7 +34,7 @@ namespace 自动备份系统
 
     public class XMLLog
     {    
-        public int Time { get; internal set; }
+        public string Time { get; internal set; }
         public string Event { get; internal set; }
 
     }
@@ -50,8 +50,8 @@ namespace 自动备份系统
             //TaskData = new ObservableCollection<TaskInfo>();//实例化数据
             //TaskData.Add(new { Name = "NextTime",NextTime = "fsdfa" });
 
-            lvwTasks.DataContext = TaskData;//绑定数据
-            lvwLog.DataContext = log;
+            lvwTasks.DataContext = TaskData;//绑定任务列表数据
+            lvwLog.DataContext = LogData;//绑定日志数据
 
         }
         public StringBuilder log = new StringBuilder();//“当前日志”中显示的内容，由备份线程控制
@@ -129,7 +129,7 @@ namespace 自动备份系统
         private void loadLog()
         {
            
-            XmlNode currentLog;
+            //XmlNode currentLog;
             if (!File.Exists("log.xml"))
             {
                 XmlDeclaration xdec = xml.CreateXmlDeclaration("1.0", "UTF-8", null);
@@ -144,12 +144,25 @@ namespace 自动备份系统
             XmlElement root = xml.DocumentElement;
             for(int i=0;i<root.ChildNodes.Count;i++)
             {
-                
+                lbxLogList.Items.Add(root.ChildNodes[i].Name);
             }
-            xml.Save("log.xml");
+            //xml.Save("log.xml");
 
         }
-
+        public void refreshLog()
+        {
+            xml.Load("log.xml");
+            XmlElement root = xml.DocumentElement;
+            for (int i = 0; i < root.ChildNodes.Count; i++)
+            {
+                if(!lbxLogList.Items.Contains((object)root.ChildNodes[i].Name))
+                {
+                    lbxLogList.Dispatcher.Invoke(new Action(() => { lbxLogList.Items.Add(root.ChildNodes[i].Name); }));
+                   //因为此时这个方法是由不同线程的BackupCore调用的，而lbxLogList在主线程上，所以需要Invoke。
+                }
+           
+            }
+        }
 
         private void timer_Tick(object sender, EventArgs e)
         {
@@ -333,6 +346,19 @@ namespace 自动备份系统
                 RefreshListView();
                 timer.Start();
             }
+        }
+
+        private void lbxItemsPreviewMouseLeftButtonUpEventHandler(object sender, MouseButtonEventArgs e)
+        {
+            LogData.Clear();
+            foreach (XmlElement i in  xml.DocumentElement[lbxLogList.SelectedItem.ToString()])
+            {
+                LogData.Add(new XMLLog() { Time = i.GetAttribute("Time"), Event = i.GetAttribute("Event") });
+            }
+            lvwLog.Items.Refresh();
+               
+
+
         }
         //public void refreshLog(StringBuilder log)
         //{
