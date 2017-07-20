@@ -155,7 +155,7 @@ namespace 自动备份系统
             XmlElement root = xml.DocumentElement;
             for (int i = 0; i < root.ChildNodes.Count; i++)
             {
-                if(!lbxLogList.Items.Contains((object)root.ChildNodes[i].Name))
+                if(!lbxLogList.Items.Contains(root.ChildNodes[i].Name))
                 {
                     lbxLogList.Dispatcher.Invoke(new Action(() => { lbxLogList.Items.Add(root.ChildNodes[i].Name); }));
                    //因为此时这个方法是由不同线程的BackupCore调用的，而lbxLogList在主线程上，所以需要Invoke。

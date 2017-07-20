@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:自动备份系统"
         mc:Ignorable="d"
+        xmlns:input="clr-namespace:System.Windows.Input;assembly=PresentationCore"
         Title="任务设置" Height="500" Width="600"
         Loaded="WindowLoadedEventHandler">
     <Grid Margin="4">
@@ -99,7 +100,7 @@
                         <ColumnDefinition Width="4"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox x:Name="txtTargetDirectory" Height="24"/>
+                    <TextBox x:Name="txtTargetDirectory" Height="24" MaxLines="1" />
                     <Button Grid.Column="2" Width="64" Height="24" Content="浏览" Click="SelectTargetDirectoryButtonClickEventHandler"/>
 
                 </Grid>
@@ -109,7 +110,7 @@
                     <ColumnDefinition Width="4"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBox x:Name="txtInterval" Height="24"/>
+                <TextBox x:Name="txtInterval" Height="24" TextChanged="txtEnterOnlyPlusIntergerNumberTextChangedEventHandler" input:InputMethod.IsInputMethodEnabled="False" MaxLines="1" MaxLength="5" PreviewMouseUp="txtEnterOnlyPlusIntergerNumberPreviewMouseUpEventHandler"/>
                 <ComboBox  x:Name="cboTimeUnit" Grid.Column="2" SelectedIndex="0" Width="64" Height="24">
                     <ComboBoxItem Content="秒"/>
                     <ComboBoxItem Content="分"/>
@@ -119,7 +120,7 @@
                 </ComboBox>
             </Grid>
 
-            <TextBox Name="txtName" Grid.Row="8" Grid.Column="2" Height="24" />
+            <TextBox Name="txtName" Grid.Row="8" Grid.Column="2" Height="24" MaxLines="1" MaxLength="20"/>
 
         </Grid>
     </Grid>

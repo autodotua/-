@@ -79,5 +79,16 @@ namespace 自动备份系统.Properties {
                 return ((System.Drawing.Icon)(obj));
             }
         }
+        
+        /// <summary>
+        ///   查找类似 &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+        ///&lt;文件自动备份系统日志XML测试&gt;
+        ///&lt;/文件自动备份系统日志XML测试&gt; 的本地化字符串。
+        /// </summary>
+        internal static string XmlTest {
+            get {
+                return ResourceManager.GetString("XmlTest", resourceCulture);
+            }
+        }
     }
 }

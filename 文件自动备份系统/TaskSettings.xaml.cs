@@ -3,6 +3,10 @@ using System.Windows;
 using System.IO;
 using System.Configuration;
 using System.Windows.Media.Imaging;
+using System.Collections.Generic;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Xml;
 
 namespace 自动备份系统
 {
@@ -174,6 +178,33 @@ namespace 自动备份系统
         Configuration cfa = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
         private void OKButtonClickEventHandler(object sender, RoutedEventArgs e)
         {
+            //检查目录
+            if (!Directory.Exists(txtTargetDirectory.Text))
+            {
+                MessageBox.Show("目标目录输入不正确！", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            //检查名称
+            string tempFileName = System.IO.Path.GetTempFileName();
+            using (FileStream fs = new FileStream(tempFileName, FileMode.Create))
+            { fs.Write(System.Text.Encoding.UTF8.GetBytes(Properties.Resources.XmlTest), 0, System.Text.Encoding.UTF8.GetBytes(Properties.Resources.XmlTest).Length); }
+
+            try
+            {
+                XmlDocument XmlTest = new XmlDocument();
+                XmlTest.Load(tempFileName);
+                XmlTest.DocumentElement.AppendChild(XmlTest.CreateElement(txtName.Text));
+                XmlTest.Save(tempFileName);
+                XmlTest.Load(tempFileName);
+            }
+            catch
+            {
+                MessageBox.Show("名称格式不正确！需要以文字开头，不能使用某些符号", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+
+
             string white = "";
             foreach (var i in lvwWhite.Items)
             {
@@ -255,6 +286,57 @@ namespace 自动备份系统
             txtName.Text = name;
 
         }
+  
+        Dictionary<TextBox, string> lastString = new Dictionary<TextBox, string>();
+        Dictionary<TextBox, int> lastSelectPosition = new Dictionary<TextBox, int>();
+        bool isChanging = false;
+        private void txtEnterOnlyPlusIntergerNumberTextChangedEventHandler(object sender, TextChangedEventArgs e)
+        {if(isChanging)
+            {
+                return;
+            }
+            isChanging = true;
+            if (((TextBox)sender).Text != "")
+            {
+                double tryNum;
+                try
+                {
+                    tryNum = double.Parse(((TextBox)sender).Text);
+                    if (tryNum != Math.Round(tryNum) || tryNum <= 0 || ((TextBox)sender).Text.Contains("."))
+                    {
+                        ((TextBox)sender).Text = lastString[(TextBox)sender];
+                        ((TextBox)sender).Select(lastSelectPosition[(TextBox)sender], 0);
+                        isChanging = false;
+                        return;
+                    }
+                    lastString[(TextBox)sender] = ((TextBox)sender).Text;
+                    lastSelectPosition[(TextBox)sender] = ((TextBox)sender).SelectionStart;
+                }
+                catch (Exception)
+                {
+                    try
+                    {
+                        ((TextBox)sender).Text = lastString[(TextBox)sender];
+                    }
+                    catch
+                    {
+                        ((TextBox)sender).Text = "";
+                    }
+                   ((TextBox)sender).Select(lastSelectPosition[(TextBox)sender], 0);
+                }
+            }
+            else
+            {
+                lastString[(TextBox)sender] = "";
+                lastSelectPosition[(TextBox)sender]= 0;
+            }
+            isChanging = false;
+        }
+
+        private void txtEnterOnlyPlusIntergerNumberPreviewMouseUpEventHandler(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            lastSelectPosition[(TextBox)sender] = ((TextBox)sender).SelectionStart;
+        }
     }
-}
+    }
     
