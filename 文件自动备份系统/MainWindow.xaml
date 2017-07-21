@@ -48,6 +48,7 @@
 
         <Style TargetType="{x:Type ListViewItem}">
             <Style.Setters>
+                <EventSetter  Event="PreviewMouseLeftButtonUp" Handler="ListViewItem_PreviewMouseLeftButtonUp_1" />
                 <Setter Property="SnapsToDevicePixels" Value="True"/>
                 <Setter Property="Template">
                     <Setter.Value>
@@ -96,7 +97,7 @@
         </Grid.ColumnDefinitions>
         <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch"   Height="5" Grid.ColumnSpan="2" Background="{DynamicResource {x:Static SystemColors.ScrollBarBrushKey}}" Margin="0,0,4,0" />
 
-        <ListView Foreground="Black" Name="lvwTasks"  ItemsSource="{Binding}" PreviewMouseDoubleClick="lvwTasks_PreviewMouseDoubleClick">
+        <ListView Foreground="Black" Name="lvwTasks"  ItemsSource="{Binding}" PreviewMouseDoubleClick="lvwTasksPreviewMouseDoubleClickEventHandler">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="ID" Width="40" DisplayMemberBinding="{Binding Path=Id}"/>
@@ -148,15 +149,15 @@
         <StackPanel Grid.RowSpan="3" Grid.Column="2">
             <Button Content="新建任务"  Width="64" Height="24" Click="NewTaskButtonClickEventHandler"/>
             <TextBlock/>
-            <Button Content="编辑任务"  Width="64" Height="24" Click="EditTaskButtonClickEventHandler"/>
+            <Button x:Name="btnEditTask" Content="编辑任务"  Width="64" Height="24" Click="EditTaskButtonClickEventHandler" IsEnabled="False"/>
             <TextBlock/>
-            <Button Content="删除任务"  Width="64" Height="24" Click="DeleteTaskButtonClickEventHandler"/>
+            <Button x:Name="btnDeleteTask" Content="删除任务"  Width="64" Height="24" Click="DeleteTaskButtonClickEventHandler" IsEnabled="False"/>
             <TextBlock/>
             <Button Content="暂停计时"  Width="64" Height="24" Click="PauseTimerButtonClickEventHandler"/>
             <TextBlock/>
             <Button Content="停止所有"  Width="64" Height="24" Click="StopThreadButtonClickEventHandler"/>
             <TextBlock/>
-            <Button Content="强制执行"  Width="64" Height="24" Click="ForceToExecuteButtonClickEventHandler"/>
+            <Button x:Name="btnForceToExecute" Content="强制执行"  Width="64" Height="24" Click="ForceToExecuteButtonClickEventHandler" IsEnabled="False"/>
             <TextBlock/>
 
         </StackPanel>

@@ -88,7 +88,6 @@
                     <Button Content="  浏览  " Grid.Column="2" Height="24" Width="64" Click="SelectBlackDirectoryButtonClickEventHandler"></Button>
                     <Button Content="  删除  " Grid.Column="4" Width="64" Height="24"  Click="DeleteBlackDirectoryButtonClickEventHandler"></Button>
                     <Button Content="  新建  " Grid.Column="4" Height="24" Width="64" Click="NewBlackDirectoryButtonClickEventHandler"></Button>
-                    <Button Content="  删除  " Grid.Column="4" Width="64" Height="24"  Click="DeleteBlackDirectoryButtonClickEventHandler"></Button>
 
                     <Button Content="  删除  " Grid.Column="6" Width="64" Height="24"  Click="DeleteBlackDirectoryButtonClickEventHandler"></Button>
                     <ListView x:Name="lvwBlack" Grid.ColumnSpan="7" Grid.Row="3" DragEnter="LvwBlackDragEnterEventHandler" Drop="LvwBlackDropEventHandler" AllowDrop="True" DragLeave="LvwBlackDragLeaveEventHandler"/>

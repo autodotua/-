@@ -17,10 +17,14 @@ namespace 自动备份系统
     {
 
         string name;
-        public TaskSettings(string taskName)
+        public TaskSettings(string taskName,bool lockName)
         {
             InitializeComponent();
             name = taskName;
+            if(lockName)
+            {
+                txtName.IsEnabled = false;
+            }
         }
         #region 白名单
         private void NewWhiteDirectoryButtonClickEventHandler(object sender, RoutedEventArgs e)

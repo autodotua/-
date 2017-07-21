@@ -255,7 +255,7 @@ namespace 自动备份系统
         private void NewTaskButtonClickEventHandler(object sender, RoutedEventArgs e)
         {
             timer.Stop();
-            new TaskSettings("").ShowDialog();
+            new TaskSettings("",false).ShowDialog();
             reinitialize();
             RefreshListView();
             timer.Start();
@@ -320,7 +320,7 @@ namespace 自动备份系统
             if (lvwTasks.SelectedIndex != -1)
                  {
                 timer.Stop();
-                new TaskSettings(itemsName[lvwTasks.SelectedIndex]).ShowDialog();
+                new TaskSettings(itemsName[lvwTasks.SelectedIndex],true).ShowDialog();
                 reinitialize();
                 RefreshListView();
                 timer.Start();
@@ -336,12 +336,16 @@ namespace 自动备份系统
             this.Visibility = Visibility.Hidden;
         }
 
-        private void lvwTasks_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void lvwTasksPreviewMouseDoubleClickEventHandler(object sender, MouseButtonEventArgs e)
         {
+            //bool isInListViewItems = false;
+ 
+                    //Mouse.GetPosition(e.Source as FrameworkElement)
+
             if (lvwTasks.SelectedIndex != -1)
             {
                 timer.Stop();
-                new TaskSettings(itemsName[lvwTasks.SelectedIndex]).ShowDialog();
+                new TaskSettings(itemsName[lvwTasks.SelectedIndex],true).ShowDialog();
                 reinitialize();
                 RefreshListView();
                 timer.Start();
@@ -359,6 +363,22 @@ namespace 自动备份系统
                
 
 
+        }
+
+
+        private void ListViewItem_PreviewMouseLeftButtonUp_1(object sender, MouseButtonEventArgs e)
+        { 
+            if (((ListViewItem)sender).ToString().Contains("TaskInfo"))
+            {
+                if (lvwTasks.SelectedIndex != -1)
+                {
+                    btnDeleteTask.IsEnabled = true;
+                    btnEditTask.IsEnabled = true;
+                    btnForceToExecute.IsEnabled = true;
+                    
+                }
+
+            }
         }
         //public void refreshLog(StringBuilder log)
         //{
