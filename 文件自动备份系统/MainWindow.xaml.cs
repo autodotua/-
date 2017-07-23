@@ -1,22 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Threading;
 using System.Collections.ObjectModel;
 using System.Configuration;
-using System.Diagnostics;
 using System.IO;
+using System.Text;
+using System.Threading;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media.Imaging;
 using System.Xml;
 
 namespace 自动备份系统
@@ -378,7 +370,7 @@ namespace 自动备份系统
             }
             else
             {
-                MessageBox.Show("未选择任何任务！");
+                MessageBox.Show("未选择任何任务！", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         private void MainWindowClosingEventHandler(object sender, System.ComponentModel.CancelEventArgs e)
@@ -431,9 +423,11 @@ namespace 自动备份系统
 
             }
         }
-        //public void refreshLog(StringBuilder log)
-        //{
-        //    txtLogPanel.Text = log.ToString();
-        //}
+
+        private void txtLogPanelPreviewKeyDownEventHandler(object sender, KeyEventArgs e)
+        {
+            e.Handled = true;
+        }
+
     }
 }

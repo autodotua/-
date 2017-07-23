@@ -1,13 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-using System.Diagnostics;
 using System.Configuration;
-using System.ComponentModel;
-using System.Windows.Threading;
+using System.IO;
 using System.Xml;
 
 namespace 自动备份系统
@@ -18,7 +12,7 @@ namespace 自动备份系统
         public BackupCore(MainWindow _winMain)
         {
             winMain = _winMain;//获取MainWindow实例
- 
+
             //if(!File.Exists("log.xml"))
             //{
             //    XmlDeclaration xdec = xml.CreateXmlDeclaration("1.0", "UTF-8", null);
@@ -27,8 +21,8 @@ namespace 自动备份系统
             //}
             //else
             //{
-                xml.Load("log.xml");
-           // }
+            xml.Load("log.xml");
+            // }
 
         }
         XmlDocument xml = new XmlDocument();
@@ -40,11 +34,11 @@ namespace 自动备份系统
         private void appendLog(string value)
         {
             logIndex++;
-            XmlElement xe = xml.CreateElement("log"+logIndex.ToString());
+            XmlElement xe = xml.CreateElement("log" + logIndex.ToString());
             xe.SetAttribute("Time", DateTime.Now.ToString() + "." + DateTime.Now.Millisecond);
             xe.SetAttribute("Event", value);
             currentLog.AppendChild(xe);
-            winMain.log.Append("[" + taskName + "]"+DateTime.Now.ToString() + "." + DateTime.Now.Millisecond +"                 "+value + System.Environment.NewLine + System.Environment.NewLine);
+            winMain.log.Append("[" + taskName + "]" + DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "                 " + value + System.Environment.NewLine + System.Environment.NewLine);
         }
 
         public void Backup(object name)
@@ -71,32 +65,79 @@ namespace 自动备份系统
                 blackDirectories.Add(i);
             }
             //挑出其中的文件，其余的列举文件
-            foreach (var i in whiteDirectories)
+            try
             {
-                if (new FileInfo(i).Attributes == FileAttributes.Directory)
-                {
-                    listFiles(i);
+                foreach (var i in whiteDirectories)
+            {
+              
+                    if (new FileInfo(i).Attributes == FileAttributes.Directory)
+                    {
+                        listFiles(i);
+                    }
+                    else
+                    {
+                        fileName.Add(new FileInfo(i).Name);
+                    }
                 }
-                else
-                {
-                    fileName.Add(new FileInfo(i).Name);
-                }
-            }
             appendLog("共发现" + fileName.Count + "个需要检查的文件");
-            targetDirectory = cfa.AppSettings.Settings[name + "_TargetDirectory"].Value;
+            }  
+            catch (Exception ex)
+            {
+                appendLog("在列举y源目录里的文件时发生异常：" + ex.Message);
+                appendLog("备份失败");
+                goto finish;
+            }
+
+    targetDirectory = cfa.AppSettings.Settings[name + "_TargetDirectory"].Value;
             //列举目标目录文件
-            listBackupedFiles(targetDirectory);
+            try
+            {
+                listBackupedFiles(targetDirectory);
+            }
+            catch (Exception ex)
+            {
+                appendLog("在列举备份目录里的文件时发生异常：" + ex.Message);
+                appendLog("备份失败");
+                goto finish;
+            }
             //列举差异项
-            listDiferrences();
+            try
+            {
+                listDiferrences();
+            }
+            catch (Exception ex)
+            {
+                appendLog("在列举不同文件并重命名时发生异常：" + ex.Message);
+                appendLog("备份失败");
+                goto finish;
+            }
             //列举并且重命名源文件夹消失的部分
-            listOldBackupedFilesAndRename();
+            try
+            {
+                listOldBackupedFilesAndRename();
+            }
+            catch (Exception ex)
+            {
+                appendLog("在列举并重命名旧的备份文件时发生异常：" + ex.Message);
+                appendLog("备份失败");
+                goto finish;
+            }
+
             //将不同的部分复制到目标文件夹
-            moveDiferrences();
-           //保存日志
+            if (!moveDiferrences())
+            {
+                appendLog("备份失败，复制了" + (fileName.Count - sameFilesIndex.Count).ToString() + "个文件");
+            }
+            finish:
+            //保存日志
             xml.Save("log.xml");
             //刷新日志
             winMain.refreshLog();
-            //winMain.lbxLogList.Dispatcher.Invoke(new Action(() =>{winMain.lbxLogList.Items.Refresh(); }));
+            //不再正在复制
+            winMain.CurrentBackupThreads = 0;
+            //重新开始计时
+            winMain.itemsLastTime[winMain.itemsName.IndexOf(taskName)] = int.Parse(cfa.AppSettings.Settings[taskName + "_Interval"].Value);
+
 
         }
 
@@ -201,7 +242,6 @@ namespace 自动备份系统
                                 //修改时间相同但是大小不同，应该说是一件比较蹊跷的事，但是还是考虑一下
                                 targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension);
                                 appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension);
-                                //winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
                             }
                         }
                         else
@@ -219,16 +259,13 @@ namespace 自动备份系统
 
             }
             appendLog("共发现" + sameFilesIndex.Count + "个文件没有更新");
-           // winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                共发现" + sameFilesIndex.Count + "个文件没有更新" + Environment.NewLine + Environment.NewLine);
-            //refreshLog();
         }
 
-        //public delegate void passLogDelegate();
 
 
-            /// <summary>
-            /// 列举并且重命名那些旧的备份
-            /// </summary>
+        /// <summary>
+        /// 列举并且重命名那些旧的备份
+        /// </summary>
         private void listOldBackupedFilesAndRename()
         {
 
@@ -242,7 +279,6 @@ namespace 自动备份系统
                         {
                             FileInfo targetFile = new FileInfo(targetDirectory + backupedFileName[i]);
                             targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
-                            //winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
                             appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
                             continue;
                         }
@@ -255,10 +291,12 @@ namespace 自动备份系统
 
 
 
+
+
         /// <summary>
         /// 备份差异项
         /// </summary>
-        private void moveDiferrences()
+        private bool moveDiferrences()
         {
             int skipFile = 0;
             int fileCount = 0;
@@ -271,24 +309,31 @@ namespace 自动备份系统
                 }
                 fileCount++;
                 FileInfo targetFile = new FileInfo(targetDirectory + "\\" + fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#") + fileName[i]);
-                if (!targetFile.Directory.Exists)
+                try
                 {
-                    //如果目标文件的目录不存在的话就创建一个，否则会报异常
-                    targetFile.Directory.Create();
+                    if (!targetFile.Directory.Exists)
+                    {
+                        //如果目标文件的目录不存在的话就创建一个，否则会报异常
+                        targetFile.Directory.Create();
+                    }
+                    //复制文件
+                    File.Copy(fullFileName[i], targetFile.FullName);
                 }
-                //复制文件
-                File.Copy(fullFileName[i], targetFile.FullName);
-                //winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已复制" + fullFileName[i] + "到" + targetFile.FullName + System.Environment.NewLine + System.Environment.NewLine);
+                catch (System.IO.IOException IOEx)
+                {
+                    appendLog("在复制文件时发生读写异常：" + IOEx.Message);
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    appendLog("在复制文件时发生异常：" + ex.Message);
+                    return false;
+                }
                 appendLog("已复制" + fullFileName[i] + "到" + targetFile.FullName);
-                // winMain.txtLogPanel.Dispatcher.c
-                //refreshLog();
                 winMain.CurrentFileCount = "正在复制：" + fileCount.ToString() + "/" + (fileName.Count - sameFilesIndex.Count).ToString();
             }
-            winMain.CurrentBackupThreads = 0;
-            //winMain.refreshLog(log);
-            winMain.itemsLastTime[winMain.itemsName.IndexOf(taskName)] = int.Parse(cfa.AppSettings.Settings[taskName + "_Interval"].Value);
-            // winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                备份完成，复制了" + (fileName.Count - sameFilesIndex.Count).ToString() + "个文件" + System.Environment.NewLine + System.Environment.NewLine);
-            appendLog("备份完成，复制了" + (fileName.Count - sameFilesIndex.Count).ToString() + "个文件");
+            appendLog("备份完成，复制了" + fileCount.ToString() + "个文件");
+            return true;
         }
 
     }

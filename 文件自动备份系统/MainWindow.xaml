@@ -113,7 +113,7 @@
 
         <TabControl  Grid.Row="2">
             <TabItem Header="当前日志">
-                <TextBox x:Name="txtLogPanel" Grid.Row="2" MouseLeave="txtLogPanel_MouseLeave" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"   />
+                <TextBox x:Name="txtLogPanel" Grid.Row="2" MouseLeave="txtLogPanel_MouseLeave" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"  PreviewKeyDown="txtLogPanelPreviewKeyDownEventHandler" />
             </TabItem>
             <TabItem Header="所有日志">
                 <Grid>
