@@ -87,7 +87,7 @@ namespace 自动备份系统
             miExit.Click += new EventHandler(delegate (object sender3, EventArgs e3)
             {
                 notifyIcon.Visible = false;
-                System.Windows.Application.Current.Shutdown();
+                Application.Current.Shutdown();
             });
             System.Windows.Forms.MenuItem miPause = new System.Windows.Forms.MenuItem("暂停计时");
             miPause.Click += new EventHandler(delegate (object sender2, EventArgs e2) { pauseTimer = !pauseTimer; });
@@ -96,6 +96,11 @@ namespace 自动备份系统
             notifyIcon.ContextMenu = new System.Windows.Forms.ContextMenu(childen);
             this.Icon = new BitmapImage(new Uri(tempFileName));
 
+            if (cfa.AppSettings.Settings["AutoMinimum"].Value == "true")
+            {
+                cbxMinimum.IsChecked = true;
+            }
+
             if (System.IO.File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.Startup) + "\\FileBackuper.lnk"))
             {
                 cbxStartup.IsChecked = true;
@@ -103,7 +108,7 @@ namespace 自动备份系统
 
 
             LoadLog();
-            
+
             RefreshListView();
             timer.Interval = new TimeSpan(0, 0, 1);
             timer.Tick += new EventHandler(Timer_Tick);
@@ -115,16 +120,43 @@ namespace 自动备份系统
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
             {
-                if (this.Visibility == Visibility.Visible)
+                if (WindowState != WindowState.Minimized)
                 {
-                    this.Visibility = Visibility.Hidden;
+                    //ShowInTaskbar = false;
+                    WindowState = WindowState.Minimized;
+                    Hide();
                 }
                 else
                 {
-                    this.Visibility = Visibility.Visible;
-                    this.Activate();
+                    //ShowInTaskbar = true;
+
+                    //WindowState = WindowState.Maximized;
+                    WindowState = WindowState.Normal;
+
+                    //Measure(new Size(Double.PositiveInfinity, Double.PositiveInfinity));
+
+                    Show();
+                    //Arrange(new Rect(DesiredSize));
+                    Activate();
+                    //不知道为什么，试了一个小时还是没法把窗口调出来，然后发现回车键可以，就模拟一下了
+                    System.Windows.Forms.SendKeys.SendWait("{ENTER}");
                 }
             }
+           // this.Margin = new Thickness(300);
+
+            // }
+            //if (this.Visibility == Visibility.Visible)
+            //{
+            //    this.WindowState = WindowState.Minimized;
+            //    this.Visibility = Visibility.Hidden;
+            //}
+            //else
+            //{
+            //    this.WindowState = WindowState.Normal;
+            //    this.Visibility = Visibility.Visible;
+            //    this.Activate();
+            //}
+            //  }
         }
 
 
@@ -503,45 +535,49 @@ namespace 自动备份系统
 
         private void CbxStartupClickEventHandler(object sender, RoutedEventArgs e)
         {
-            if(((CheckBox)sender).IsChecked==true)
+            if (((CheckBox)sender).IsChecked == true)
             {
-               
-                    string Path = Environment.GetFolderPath(Environment.SpecialFolder.Startup);// System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop) + "\\新建文件夹 (3)"; //"%USERPROFILE%\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup";
 
-                    IWshRuntimeLibrary.WshShell shell = new IWshRuntimeLibrary.WshShell();
-                    IWshShortcut sc = (IWshShortcut)shell.CreateShortcut(Path + "\\FileBackuper.lnk");
-                    sc.TargetPath = Process.GetCurrentProcess().MainModule.FileName;
-                    sc.WorkingDirectory = Environment.CurrentDirectory;
-                    sc.Save();
-                    //Debug.WriteLine(Path);
-                    if (System.IO.File.Exists(Path + "\\FileBackuper.lnk"))
-                    {
-                       MessageBox.Show("成功", "错误", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show("失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
+                string Path = Environment.GetFolderPath(Environment.SpecialFolder.Startup);// System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop) + "\\新建文件夹 (3)"; //"%USERPROFILE%\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup";
+
+                IWshRuntimeLibrary.WshShell shell = new IWshRuntimeLibrary.WshShell();
+                IWshShortcut sc = (IWshShortcut)shell.CreateShortcut(Path + "\\FileBackuper.lnk");
+                sc.TargetPath = Process.GetCurrentProcess().MainModule.FileName;
+                sc.WorkingDirectory = Environment.CurrentDirectory;
+                sc.Save();
+                //Debug.WriteLine(Path);
+                if (System.IO.File.Exists(Path + "\\FileBackuper.lnk"))
+                {
+                    MessageBox.Show("成功", "错误", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    string Path = Environment.GetFolderPath(Environment.SpecialFolder.Startup);// System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop) + "\\新建文件夹 (3)"; //"%USERPROFILE%\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup";
-
-                    System.IO.File.Delete(Path + "\\FileBackuper.lnk");
-                    if (System.IO.File.Exists(Path + "\\FileBackuper.lnk"))
-                    {
-                        MessageBox.Show("失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                    else
-                    {
-                        MessageBox.Show("成功", "错误", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-
+                    MessageBox.Show("失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
+            else
+            {
+                string Path = Environment.GetFolderPath(Environment.SpecialFolder.Startup);// System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop) + "\\新建文件夹 (3)"; //"%USERPROFILE%\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup";
 
+                System.IO.File.Delete(Path + "\\FileBackuper.lnk");
+                if (System.IO.File.Exists(Path + "\\FileBackuper.lnk"))
+                {
+                    MessageBox.Show("失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                else
+                {
+                    MessageBox.Show("成功", "错误", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
 
+            }
+        }
+
+        private void cbxMinimumClickEventHandler(object sender, RoutedEventArgs e)
+        {
+            cfa.AppSettings.Settings["AutoMinimum"].Value = cbxMinimum.IsChecked == true ? "true" : "false";
+            cfa.Save();
         }
     }
-    
+}
+
 

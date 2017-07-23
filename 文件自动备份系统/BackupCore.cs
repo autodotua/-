@@ -56,20 +56,40 @@ namespace 自动备份系统
             tempWhiteListViewItems = cfa.AppSettings.Settings[name + "_White"] != null ? cfa.AppSettings.Settings[name + "_White"].Value : "";
             foreach (var i in tempWhiteListViewItems.Split(new string[] { "#Split#" }, StringSplitOptions.RemoveEmptyEntries))
             {
-                whiteDirectories.Add(i);
+                if (Directory.Exists(i))
+                {
+                    whiteDirectories.Add(i);
+                }
+                else
+                {
+                    appendLog("找不到部分白名单目录：" + i);
+                }
+                if(whiteDirectories.Count==0)
+                {
+                    appendLog("没有找到任何源文件");
+                    appendLog("备份失败");
+                    goto finish;
+                }
             }
             string tempBlackListViewItems;
             tempBlackListViewItems = cfa.AppSettings.Settings[name + "_Black"] != null ? cfa.AppSettings.Settings[name + "_Black"].Value : "";
             foreach (var i in tempBlackListViewItems.Split(new string[] { "#Split#" }, StringSplitOptions.RemoveEmptyEntries))
             {
-                blackDirectories.Add(i);
+                if (Directory.Exists(i))
+                {
+                    blackDirectories.Add(i);
+                }
+                else
+                {
+                    appendLog("找不到部分黑名单目录：" + i);
+                }
             }
             //挑出其中的文件，其余的列举文件
             try
             {
                 foreach (var i in whiteDirectories)
             {
-              
+           
                     if (new FileInfo(i).Attributes == FileAttributes.Directory)
                     {
                         listFiles(i);

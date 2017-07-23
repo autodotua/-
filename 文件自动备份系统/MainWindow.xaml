@@ -245,6 +245,8 @@
             <Line Stroke="Black" StrokeThickness="1" X1="0" Y1="0" X2="64" Y2="0"/>
             <TextBlock/>
             <CheckBox x:Name="cbxStartup" Content="开机自启" Width="64" Height="24" Click="CbxStartupClickEventHandler"/>
+            <TextBlock/>
+            <CheckBox x:Name="cbxMinimum" Content="自动隐藏" Width="64" Height="24" Click="cbxMinimumClickEventHandler"/>
 
         </StackPanel>
         <Button Content="完全退出"  Width="64" Height="24" Click="ExitButtonClickEventHandler" Background="#FFFFD9D9" Grid.Row="2" Grid.Column="2" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,8"/>
