@@ -323,7 +323,7 @@ namespace 自动备份系统
         {
             backupThread.Abort();
             CurrentBackupThreads = 0;
-            itemsLastTime[currentTaskIndex] = int.Parse(TaskData[currentTaskIndex].Interval);
+            itemsLastTime[currentTaskIndex] = int.Parse(cfa.AppSettings.Settings[TaskData[currentTaskIndex].Name+"_Interval"].Value);
         }
         /// <summary>
         /// 单击暂停时间按钮
@@ -350,7 +350,6 @@ namespace 自动备份系统
         /// <param name="e"></param>
         private void ForceToExecuteButtonClickEventHandler(object sender, RoutedEventArgs e)
         {
-
             itemsLastTime[lvwTasks.SelectedIndex] = 0;
         }
         /// <summary>

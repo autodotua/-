@@ -245,7 +245,11 @@ namespace 自动备份系统
                 MessageBox.Show("输入的时间有误！");
             }
 
-            cfa.AppSettings.Settings["Items"].Value += txtName.Text + "#Split#";
+if(txtName.IsEnabled)
+            {
+                cfa.AppSettings.Settings["Items"].Value += txtName.Text + "#Split#";
+
+            }
             cfa.Save();
             this.Close();
         }
