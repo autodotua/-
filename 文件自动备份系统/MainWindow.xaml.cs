@@ -33,7 +33,7 @@ namespace 自动备份系统
     }
 
     public class XMLLog
-    {    
+    {
         public string Time { get; internal set; }
         public string Event { get; internal set; }
 
@@ -57,7 +57,7 @@ namespace 自动备份系统
         public StringBuilder log = new StringBuilder();//“当前日志”中显示的内容，由备份线程控制
         Thread backupThread;//备份线程
         int currentTaskIndex;//正在进行哪一个任务的备份
-        public ObservableCollection<TaskInfo> TaskData= new ObservableCollection<TaskInfo>();//需要绑定的数据
+        public ObservableCollection<TaskInfo> TaskData = new ObservableCollection<TaskInfo>();//需要绑定的数据
         public ObservableCollection<XMLLog> LogData = new ObservableCollection<XMLLog>();
 
         Configuration cfa = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);//配置项
@@ -87,15 +87,15 @@ namespace 自动备份系统
             notifyIcon.MouseClick += new System.Windows.Forms.MouseEventHandler(NotifyIconClickEventHandler);
 
             System.Windows.Forms.MenuItem miExit = new System.Windows.Forms.MenuItem("退出");
-            miExit.Click += new EventHandler(delegate(object sender3,EventArgs e3) 
+            miExit.Click += new EventHandler(delegate (object sender3, EventArgs e3)
             {
                 notifyIcon.Visible = false;
                 System.Windows.Application.Current.Shutdown();
             });
             System.Windows.Forms.MenuItem miPause = new System.Windows.Forms.MenuItem("暂停计时");
-            miPause.Click += new EventHandler(delegate(object sender2, EventArgs e2) { pauseTimer = !pauseTimer; });
-   
-            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] {miPause, miExit };
+            miPause.Click += new EventHandler(delegate (object sender2, EventArgs e2) { pauseTimer = !pauseTimer; });
+
+            System.Windows.Forms.MenuItem[] childen = new System.Windows.Forms.MenuItem[] { miPause, miExit };
             notifyIcon.ContextMenu = new System.Windows.Forms.ContextMenu(childen);
             this.Icon = new BitmapImage(new Uri(tempFileName));
 
@@ -128,7 +128,7 @@ namespace 自动备份系统
         XmlDocument xml = new XmlDocument();
         private void loadLog()
         {
-           
+
             //XmlNode currentLog;
             if (!File.Exists("log.xml"))
             {
@@ -142,7 +142,7 @@ namespace 自动备份系统
             }
 
             XmlElement root = xml.DocumentElement;
-            for(int i=0;i<root.ChildNodes.Count;i++)
+            for (int i = 0; i < root.ChildNodes.Count; i++)
             {
                 lbxLogList.Items.Add(root.ChildNodes[i].Name);
             }
@@ -155,14 +155,29 @@ namespace 自动备份系统
             XmlElement root = xml.DocumentElement;
             for (int i = 0; i < root.ChildNodes.Count; i++)
             {
-                if(!lbxLogList.Items.Contains(root.ChildNodes[i].Name))
+                if (!lbxLogList.Items.Contains(root.ChildNodes[i].Name))
                 {
                     lbxLogList.Dispatcher.Invoke(new Action(() => { lbxLogList.Items.Add(root.ChildNodes[i].Name); }));
-                   //因为此时这个方法是由不同线程的BackupCore调用的，而lbxLogList在主线程上，所以需要Invoke。
+                    //因为此时这个方法是由不同线程的BackupCore调用的，而lbxLogList在主线程上，所以需要Invoke。
                 }
-           
+
             }
         }
+
+        private void appendLog(string taskName, string value)
+        {
+
+            XmlElement xe = xml.CreateElement("log");
+            xe.SetAttribute("Time", DateTime.Now.ToString() + "." + DateTime.Now.Millisecond);
+            xe.SetAttribute("Event", value);
+            XmlNode currentLog = xml.CreateElement(taskName + "--" + DateTime.Now.ToString().Replace("/", "-").Replace(" ", "_").Replace(":", "-"));
+            currentLog.AppendChild(xe);
+            xml.DocumentElement.AppendChild(currentLog);
+            xml.Save("log.xml");
+            refreshLog();
+            log.Append("[" + taskName + "]" + DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "                 " + value + System.Environment.NewLine + System.Environment.NewLine);
+        }
+
 
         private void timer_Tick(object sender, EventArgs e)
         {
@@ -174,7 +189,23 @@ namespace 自动备份系统
                 {
                     if (CurrentBackupThreads == 0)
                     {
-                        // itemsLastTime[i] = int.Parse(TaskData[i].Interval);
+                        if (!Directory.Exists(TaskData[i].TargetDirectories))
+                        {
+                            try
+                            {
+                                Directory.CreateDirectory(TaskData[i].TargetDirectories);
+                            }
+                            catch
+                            {
+
+                                itemsLastTime[itemsName.IndexOf(itemsName[i])] = int.Parse(cfa.AppSettings.Settings[itemsName[i] + "_Interval"].Value);
+                                appendLog(itemsName[i], "目标目录不存在且无法创建，将在下一个周期重试。");
+                                txtLogPanel.Text = log.ToString();
+                                lvwTasks.Items.Refresh();
+                                return;
+                            }
+                        }
+
                         itemsLastTime[i] = -1;//标记正在备份
                         CurrentBackupThreads++;//标记有备份线程运行中
                         BackupCore bc = new BackupCore(this);
@@ -182,6 +213,7 @@ namespace 自动备份系统
                         backupThread.Start(itemsName[i]);
                         currentTaskIndex = i;
                         TaskData[i].State = "正在准备";
+
                     }
                     else//如果正在备份其他的东西
                     {
@@ -206,7 +238,6 @@ namespace 自动备份系统
                     }
                 }
                 txtLogPanel.Text = log.ToString();
-           
                 lvwTasks.Items.Refresh();
             }
 
@@ -229,15 +260,35 @@ namespace 自动备份系统
 
                 foreach (var i in itemsName)
                 {
-                    TaskData.Add(new TaskInfo
+         if(cfa.AppSettings.Settings[i + "_Black"].Value == "")
                     {
-                        Id = TaskData.Count + 1,
-                        Name = i,
-                        OriginalDirectories = (cfa.AppSettings.Settings[i + "_White"].Value.Remove(cfa.AppSettings.Settings[i + "_White"].Value.Length - 7, 7) + "，除了" + cfa.AppSettings.Settings[i + "_Black"].Value).Replace("#Split#", "、"),
-                        TargetDirectories = cfa.AppSettings.Settings[i + "_TargetDirectory"].Value,
-                        Interval = new TimeSpan(0, 0, int.Parse(cfa.AppSettings.Settings[i + "_Interval"].Value)).ToString(),
-                        State = "就绪"
-                    });
+                        TaskData.Add(new TaskInfo
+                        {
+                            Id = TaskData.Count + 1,
+                            Name = i,
+                            OriginalDirectories =
+(cfa.AppSettings.Settings[i + "_White"].Value.Remove(cfa.AppSettings.Settings[i + "_White"].Value.Length - 7, 7)).Replace("#Split#", "、"),
+                            TargetDirectories = cfa.AppSettings.Settings[i + "_TargetDirectory"].Value,
+                            Interval = new TimeSpan(0, 0, int.Parse(cfa.AppSettings.Settings[i + "_Interval"].Value)).ToString(),
+                            State = "就绪"
+                        });
+                    }
+         else
+                    {
+                        TaskData.Add(new TaskInfo
+                        {
+                            Id = TaskData.Count + 1,
+                            Name = i,
+                            OriginalDirectories =
+         (cfa.AppSettings.Settings[i + "_White"].Value.Remove(cfa.AppSettings.Settings[i + "_White"].Value.Length - 7, 7)
+        + "，除了" + cfa.AppSettings.Settings[i + "_Black"].Value.Remove(cfa.AppSettings.Settings[i + "_Black"].Value.Length - 7, 7))
+        .Replace("#Split#", "、"),
+                            TargetDirectories = cfa.AppSettings.Settings[i + "_TargetDirectory"].Value,
+                            Interval = new TimeSpan(0, 0, int.Parse(cfa.AppSettings.Settings[i + "_Interval"].Value)).ToString(),
+                            State = "就绪"
+                        });
+
+                    }
 
 
 
@@ -255,7 +306,7 @@ namespace 自动备份系统
         private void NewTaskButtonClickEventHandler(object sender, RoutedEventArgs e)
         {
             timer.Stop();
-            new TaskSettings("",false).ShowDialog();
+            new TaskSettings("", false).ShowDialog();
             reinitialize();
             RefreshListView();
             timer.Start();
@@ -287,12 +338,12 @@ namespace 自动备份系统
 
         private void txtLogPanel_MouseLeave(object sender, MouseEventArgs e)
         {
-            txtLogPanel.MoveFocus( new TraversalRequest(FocusNavigationDirection.Next));
+            txtLogPanel.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
         }
 
         private void ForceToExecuteButtonClickEventHandler(object sender, RoutedEventArgs e)
         {
-            
+
             itemsLastTime[lvwTasks.SelectedIndex] = 0;
         }
 
@@ -301,9 +352,9 @@ namespace 自动备份系统
             int index = lvwTasks.SelectedIndex;
             TaskData.RemoveAt(index);
             cfa.AppSettings.Settings["Items"].Value = cfa.AppSettings.Settings["Items"].Value.Replace(itemsName[index] + "#Split#", "");
-            foreach (var i in new string[] {"White","Black","TargetDirectory","Interval" })
+            foreach (var i in new string[] { "White", "Black", "TargetDirectory", "Interval" })
             {
-              
+
                 cfa.AppSettings.Settings.Remove(itemsName[index] + "_" + i);
             }
             cfa.Save();
@@ -318,9 +369,9 @@ namespace 自动备份系统
         private void EditTaskButtonClickEventHandler(object sender, RoutedEventArgs e)
         {
             if (lvwTasks.SelectedIndex != -1)
-                 {
+            {
                 timer.Stop();
-                new TaskSettings(itemsName[lvwTasks.SelectedIndex],true).ShowDialog();
+                new TaskSettings(itemsName[lvwTasks.SelectedIndex], true).ShowDialog();
                 reinitialize();
                 RefreshListView();
                 timer.Start();
@@ -339,13 +390,13 @@ namespace 自动备份系统
         private void lvwTasksPreviewMouseDoubleClickEventHandler(object sender, MouseButtonEventArgs e)
         {
             //bool isInListViewItems = false;
- 
-                    //Mouse.GetPosition(e.Source as FrameworkElement)
+
+            //Mouse.GetPosition(e.Source as FrameworkElement)
 
             if (lvwTasks.SelectedIndex != -1)
             {
                 timer.Stop();
-                new TaskSettings(itemsName[lvwTasks.SelectedIndex],true).ShowDialog();
+                new TaskSettings(itemsName[lvwTasks.SelectedIndex], true).ShowDialog();
                 reinitialize();
                 RefreshListView();
                 timer.Start();
@@ -355,19 +406,19 @@ namespace 自动备份系统
         private void lbxItemsPreviewMouseLeftButtonUpEventHandler(object sender, MouseButtonEventArgs e)
         {
             LogData.Clear();
-            foreach (XmlElement i in  xml.DocumentElement[lbxLogList.SelectedItem.ToString()])
+            foreach (XmlElement i in xml.DocumentElement[lbxLogList.SelectedItem.ToString()])
             {
                 LogData.Add(new XMLLog() { Time = i.GetAttribute("Time"), Event = i.GetAttribute("Event") });
             }
             lvwLog.Items.Refresh();
-               
+
 
 
         }
 
 
         private void ListViewItem_PreviewMouseLeftButtonUp_1(object sender, MouseButtonEventArgs e)
-        { 
+        {
             if (((ListViewItem)sender).ToString().Contains("TaskInfo"))
             {
                 if (lvwTasks.SelectedIndex != -1)
@@ -375,7 +426,7 @@ namespace 自动备份系统
                     btnDeleteTask.IsEnabled = true;
                     btnEditTask.IsEnabled = true;
                     btnForceToExecute.IsEnabled = true;
-                    
+
                 }
 
             }
