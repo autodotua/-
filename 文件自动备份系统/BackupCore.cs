@@ -132,7 +132,7 @@ namespace 自动备份系统
             //保存日志
             xml.Save("log.xml");
             //刷新日志
-            winMain.refreshLog();
+            winMain.RefreshLog();
             //不再正在复制
             winMain.CurrentBackupThreads = 0;
             //重新开始计时

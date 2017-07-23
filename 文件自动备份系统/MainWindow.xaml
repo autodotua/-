@@ -46,38 +46,44 @@
         </Style>
 
 
-        <Style TargetType="{x:Type ListViewItem}">
-            <Style.Setters>
-                <EventSetter  Event="PreviewMouseLeftButtonUp" Handler="ListViewItem_PreviewMouseLeftButtonUp_1" />
-                <Setter Property="SnapsToDevicePixels" Value="True"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type ListViewItem}">
-                            <Border x:Name="bd"  
-                                BorderThickness="1"  
-                                Padding="{TemplateBinding Padding}"  
-                                SnapsToDevicePixels="True">
-                                <GridViewRowPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"  
-                                                  Margin="3"/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsSelected" Value="True" >
-                                    <Trigger.Setters>
-                                        <Setter TargetName="bd" Property="Background" Value="#FFD9D9D9"/>
-                                    </Trigger.Setters>
-                                </Trigger>
-                                
-                                <Trigger Property="IsMouseOver"  Value="True" >
-                                    <Trigger.Setters>
-                                        <Setter TargetName="bd" Property="Background" Value="#FFC2C2C2"/>
-                                    </Trigger.Setters>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style.Setters>
+        <Style TargetType="CheckBox" >
+            <Setter Property="Content" Value=""></Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type CheckBox}">
+                        <Grid >
+                            <Rectangle x:Name="outerRectangle" Fill="#FFFFD5D5"/>
+                            <Rectangle Margin="10" x:Name="highlightCircle" >
+                            </Rectangle>
+                            <ContentPresenter Margin="5,3" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="highlightCircle" Property="Fill" Value="#FFB1FFB1"/>
+                                <Setter TargetName="outerRectangle" Property="Fill" Value="#FFB1FFB1"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="highlightCircle" Property="Fill" Value="#00000000"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="true">
+
+                                <Setter TargetName="highlightCircle" Property="Fill" Value="#00000000"/>
+                                <Setter TargetName="outerRectangle" Property="Fill" Value="#FFCCCCCC"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+
+                                <Setter TargetName="highlightCircle" Property="Fill" Value="#00000000"/>
+                                <Setter TargetName="outerRectangle" Property="Fill" Value="#FFBBBBBB"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
+
+
+
+
 
 
 
@@ -97,10 +103,47 @@
         </Grid.ColumnDefinitions>
         <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch"   Height="5" Grid.ColumnSpan="2" Background="{DynamicResource {x:Static SystemColors.ScrollBarBrushKey}}" Margin="0,0,4,0" />
 
-        <ListView Foreground="Black" Name="lvwTasks"  ItemsSource="{Binding}" PreviewMouseDoubleClick="lvwTasksPreviewMouseDoubleClickEventHandler">
+        <ListView  Foreground="Black" Name="lvwTasks"  ItemsSource="{Binding}">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="{x:Type ListViewItem}">
+                    <Style.Setters>
+                        <EventSetter  Event="PreviewMouseLeftButtonUp" Handler="LvwTaskPreviewMouseLeftButtonUpEventHandler" />
+                        <EventSetter Event="PreviewKeyDown" Handler="LvwTaskItemPreviewKeyDownEventHandler"/>
+                        <EventSetter Event="PreviewMouseDoubleClick" Handler="LvwTasksItemPreviewMouseDoubleClickEventHandler"/>
+                        <Setter Property="SnapsToDevicePixels" Value="True"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type ListViewItem}">
+                                    <Border x:Name="bd"  
+                                BorderThickness="1"  
+                                Padding="{TemplateBinding Padding}"  
+                                SnapsToDevicePixels="True">
+                                        <GridViewRowPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"  
+                                                  Margin="3"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsSelected" Value="True" >
+                                            <Trigger.Setters>
+                                                <Setter TargetName="bd" Property="Background" Value="#FFD9D9D9"/>
+                                            </Trigger.Setters>
+                                        </Trigger>
+
+                                        <Trigger Property="IsMouseOver"  Value="True" >
+                                            <Trigger.Setters>
+                                                <Setter TargetName="bd" Property="Background" Value="#FFC2C2C2"/>
+                                            </Trigger.Setters>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style.Setters>
+                </Style>
+
+            </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="ID" Width="40" DisplayMemberBinding="{Binding Path=Id}"/>
+                    <GridViewColumn  Header="ID" Width="40" DisplayMemberBinding="{Binding Path=Id}"/>
                     <GridViewColumn Header="名称" Width="80" DisplayMemberBinding="{Binding Path=Name}"/>
                     <GridViewColumn Header="源目录" Width="400" DisplayMemberBinding="{Binding Path=OriginalDirectories}"/>
                     <GridViewColumn Header="目标目录" Width="400" DisplayMemberBinding="{Binding Path=TargetDirectories}"/>
@@ -113,7 +156,7 @@
 
         <TabControl  Grid.Row="2">
             <TabItem Header="当前日志">
-                <TextBox x:Name="txtLogPanel" Grid.Row="2" MouseLeave="txtLogPanel_MouseLeave" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"  PreviewKeyDown="txtLogPanelPreviewKeyDownEventHandler" />
+                <TextBox x:Name="txtLogPanel" Grid.Row="2" MouseLeave="TxtLogPaneMouseLeaveEventHandler" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"  PreviewKeyDown="TxtLogPanelPreviewKeyDownEventHandler" />
             </TabItem>
             <TabItem Header="所有日志">
                 <Grid>
@@ -127,11 +170,46 @@
                     <ListBox Name="lbxLogList" >
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="{x:Type ListBoxItem}">
-                                <EventSetter Event="PreviewMouseLeftButtonUp" Handler="lbxItemsPreviewMouseLeftButtonUpEventHandler" />
+                                <EventSetter Event="PreviewMouseLeftButtonUp" Handler="LbxItemsPreviewMouseLeftButtonUpEventHandler" />
                             </Style>
                         </ListBox.ItemContainerStyle>
                     </ListBox>
-                    <ListView Name="lvwLog" Foreground="Black"  ItemsSource="{Binding}"  Grid.Column="2" >
+                    <ListView  Name="lvwLog" Foreground="Black"  ItemsSource="{Binding}"  Grid.Column="2" >
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="{x:Type ListViewItem}">
+                                <Style.Setters>
+                                    <Setter Property="SnapsToDevicePixels" Value="True"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="{x:Type ListViewItem}">
+                                                <Border x:Name="bd"  
+                                BorderThickness="1"  
+                                Padding="{TemplateBinding Padding}"  
+                                SnapsToDevicePixels="True">
+                                                    <GridViewRowPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"  
+                                                  Margin="3"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsSelected" Value="True" >
+                                                        <Trigger.Setters>
+                                                            <Setter TargetName="bd" Property="Background" Value="#FFD9D9D9"/>
+                                                        </Trigger.Setters>
+                                                    </Trigger>
+
+                                                    <Trigger Property="IsMouseOver"  Value="True" >
+                                                        <Trigger.Setters>
+                                                            <Setter TargetName="bd" Property="Background" Value="#FFC2C2C2"/>
+                                                        </Trigger.Setters>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style.Setters>
+                            </Style>
+
+                        </ListView.ItemContainerStyle>
+
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="时间" Width="200" DisplayMemberBinding="{Binding Path=Time}"/>
@@ -147,6 +225,9 @@
         </TabControl>
 
         <StackPanel Grid.RowSpan="3" Grid.Column="2">
+            <TextBlock Text="任务" HorizontalAlignment="Center"/>
+            <Line Stroke="Black" StrokeThickness="1" X1="0" Y1="0" X2="64" Y2="0"/>
+            <TextBlock/>
             <Button Content="新建任务"  Width="64" Height="24" Click="NewTaskButtonClickEventHandler"/>
             <TextBlock/>
             <Button x:Name="btnEditTask" Content="编辑任务"  Width="64" Height="24" Click="EditTaskButtonClickEventHandler" IsEnabled="False"/>
@@ -159,6 +240,11 @@
             <TextBlock/>
             <Button x:Name="btnForceToExecute" Content="强制执行"  Width="64" Height="24" Click="ForceToExecuteButtonClickEventHandler" IsEnabled="False"/>
             <TextBlock/>
+            
+            <TextBlock Text="程序" HorizontalAlignment="Center"/>
+            <Line Stroke="Black" StrokeThickness="1" X1="0" Y1="0" X2="64" Y2="0"/>
+            <TextBlock/>
+            <CheckBox x:Name="cbxStartup" Content="开机自启" Width="64" Height="24" Click="CbxStartupClickEventHandler"/>
 
         </StackPanel>
         <Button Content="完全退出"  Width="64" Height="24" Click="ExitButtonClickEventHandler" Background="#FFFFD9D9" Grid.Row="2" Grid.Column="2" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,8"/>
