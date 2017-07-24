@@ -108,7 +108,7 @@ namespace 自动备份系统
 
 
             LoadLog();
-
+            RefreshLog();
             RefreshListView();
             timer.Interval = new TimeSpan(0, 0, 1);
             timer.Tick += new EventHandler(Timer_Tick);
