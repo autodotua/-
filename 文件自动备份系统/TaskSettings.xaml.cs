@@ -185,8 +185,15 @@ namespace 自动备份系统
             //检查目录
             if (!Directory.Exists(txtTargetDirectory.Text))
             {
-                MessageBox.Show("目标目录输入不正确！", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
+                try
+                {
+                    Directory.CreateDirectory(txtTargetDirectory.Text);
+                }
+                catch
+                {
+                    MessageBox.Show("目标目录输入不存在且无法创建！", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
             }
             //检查名称
             string tempFileName = System.IO.Path.GetTempFileName();

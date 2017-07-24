@@ -162,7 +162,10 @@ namespace 自动备份系统
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-
+            if(CurrentBackupThreads==0)
+            {
+                stopAll.IsEnabled = false;
+            }
             for (int i = 0; i < itemsName.Count; i++)
             {
 
@@ -194,6 +197,7 @@ namespace 自动备份系统
                         backupThread.Start(itemsName[i]);
                         currentTaskIndex = i;
                         TaskData[i].State = "正在准备";
+                        stopAll.IsEnabled = true;
 
                     }
                     else//如果正在备份其他的东西
@@ -403,7 +407,7 @@ namespace 自动备份系统
         /// <param name="e"></param>
         private void LvwTasksItemPreviewMouseDoubleClickEventHandler(object sender, MouseButtonEventArgs e)
         {
-            btnEditTask.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            btnForceToExecute.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         }
 
         /// <summary>

@@ -234,9 +234,9 @@
             <TextBlock/>
             <Button x:Name="btnDeleteTask" Content="删除任务"  Width="64" Height="24" Click="DeleteTaskButtonClickEventHandler" IsEnabled="False"/>
             <TextBlock/>
-            <Button Content="暂停计时"  Width="64" Height="24" Click="PauseTimerButtonClickEventHandler"/>
+            <Button Content="启停计时"  Width="64" Height="24" Click="PauseTimerButtonClickEventHandler"/>
             <TextBlock/>
-            <Button Content="停止所有"  Width="64" Height="24" Click="StopThreadButtonClickEventHandler"/>
+            <Button x:Name="stopAll" Content="停止所有"  Width="64" Height="24" Click="StopThreadButtonClickEventHandler" IsEnabled="False"/>
             <TextBlock/>
             <Button x:Name="btnForceToExecute" Content="强制执行"  Width="64" Height="24" Click="ForceToExecuteButtonClickEventHandler" IsEnabled="False"/>
             <TextBlock/>

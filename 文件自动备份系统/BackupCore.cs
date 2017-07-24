@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.Xml;
 
@@ -31,6 +32,22 @@ namespace 自动备份系统
         //用于读取配置文件
         Configuration cfa = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
         int logIndex = 0;
+
+        string targetDirectory;
+        //黑白名单的目录
+        List<string> whiteDirectories = new List<string>();
+        List<string> blackDirectories = new List<string>();
+        //源目录文件去掉相同地址后的文件名、文件全名、修改时间和大小
+        List<string> fileName = new List<string>();
+        List<string> fullFileName = new List<string>();
+        List<DateTime> fileLastWriteTime = new List<DateTime>();
+        List<long> fileLength = new List<long>();
+        //备份过的文件的文件名、修改时间和大小
+        List<string> backupedFileName = new List<string>();
+        List<DateTime> backupedFileLastWriteTime = new List<DateTime>();
+        List<long> backupedFileLength = new List<long>();
+        List<FileInfo> aloneFiles = new List<FileInfo>();
+
         private void appendLog(string value)
         {
             logIndex++;
@@ -40,6 +57,8 @@ namespace 自动备份系统
             currentLog.AppendChild(xe);
             winMain.log.Append("[" + taskName + "]" + DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "                 " + value + System.Environment.NewLine + System.Environment.NewLine);
         }
+
+        
 
         public void Backup(object name)
         {
@@ -61,10 +80,15 @@ namespace 自动备份系统
                     whiteDirectories.Add(i);
                 }
                 else
+                    if(File.Exists(i))
+                {
+                    aloneFiles.Add(new FileInfo(i));
+                }
+                else
                 {
                     appendLog("找不到部分白名单目录：" + i);
                 }
-                if(whiteDirectories.Count==0)
+                if (whiteDirectories.Count+aloneFiles.Count == 0)
                 {
                     appendLog("没有找到任何源文件");
                     appendLog("备份失败");
@@ -88,27 +112,32 @@ namespace 自动备份系统
             try
             {
                 foreach (var i in whiteDirectories)
-            {
-           
+                {
+
                     if (new FileInfo(i).Attributes == FileAttributes.Directory)
                     {
                         listFiles(i);
                     }
                     else
                     {
-                        fileName.Add(new FileInfo(i).Name);
+                        Debug.WriteLine("奇怪的文件夹：" + i);
+                        //FileInfo fif = new FileInfo(i);
+                        //fileName.Add(fif.Name);
+                        //fullFileName.Add(fif.FullName);
+                        //fileLastWriteTime.Add(fif.LastWriteTimeUtc);
+                        //fileLength.Add(fif.Length);
                     }
                 }
-            appendLog("共发现" + fileName.Count + "个需要检查的文件");
-            }  
+                appendLog("共发现" + fileName.Count + "个需要检查的文件");
+            }
             catch (Exception ex)
             {
-                appendLog("在列举y源目录里的文件时发生异常：" + ex.Message);
+                appendLog("在列举源目录里的文件时发生异常：" + ex.Message);
                 appendLog("备份失败");
                 goto finish;
             }
 
-    targetDirectory = cfa.AppSettings.Settings[name + "_TargetDirectory"].Value;
+            targetDirectory = cfa.AppSettings.Settings[name + "_TargetDirectory"].Value;
             //列举目标目录文件
             try
             {
@@ -124,7 +153,7 @@ namespace 自动备份系统
             try
             {
                 listDiferrences();
-            }
+        }
             catch (Exception ex)
             {
                 appendLog("在列举不同文件并重命名时发生异常：" + ex.Message);
@@ -132,16 +161,16 @@ namespace 自动备份系统
                 goto finish;
             }
             //列举并且重命名源文件夹消失的部分
-            try
-            {
+            //try
+            //{
                 listOldBackupedFilesAndRename();
-            }
-            catch (Exception ex)
-            {
-                appendLog("在列举并重命名旧的备份文件时发生异常：" + ex.Message);
-                appendLog("备份失败");
-                goto finish;
-            }
+            //}
+            //catch (Exception ex)
+            //{
+            //    appendLog("在列举并重命名旧的备份文件时发生异常：" + ex.Message);
+            //    appendLog("备份失败");
+            //    goto finish;
+            //}
 
             //将不同的部分复制到目标文件夹
             if (!moveDiferrences())
@@ -160,21 +189,7 @@ namespace 自动备份系统
 
 
         }
-
-
-        string targetDirectory;
-        //黑白名单的目录
-        List<string> whiteDirectories = new List<string>();
-        List<string> blackDirectories = new List<string>();
-        //源目录文件去掉相同地址后的文件名、文件全名、修改时间和大小
-        List<string> fileName = new List<string>();
-        List<string> fullFileName = new List<string>();
-        List<DateTime> fileLastWriteTime = new List<DateTime>();
-        List<long> fileLength = new List<long>();
-        //备份过的文件的文件名、修改时间和大小
-        List<string> backupedFileName = new List<string>();
-        List<DateTime> backupedFileLastWriteTime = new List<DateTime>();
-        List<long> backupedFileLength = new List<long>();
+        
         /// <summary>
         /// 列举源目录文件
         /// </summary>
@@ -216,7 +231,10 @@ namespace 自动备份系统
             {
                 foreach (var i in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
                 {
-                    //n++;
+                    if(i.Contains("#OldBackupedFile#"))
+                        {
+                        continue;
+                    }
                     backupedFileName.Add(i.Replace(path, ""));
                     FileInfo fif = new FileInfo(i);
                     backupedFileLastWriteTime.Add(fif.LastWriteTimeUtc);
@@ -229,46 +247,49 @@ namespace 自动备份系统
 
         //List<int> differentFilesIndex = new List<int>();
         List<int> sameFilesIndex = new List<int>();
-        List<int> sameBackupedFilesIndex = new List<int>();
-        List<string> fileDirectories = new List<string>();
+        List<string> sameBackupedFiles = new List<string>();
+        // List<string> fileDirectories = new List<string>();
 
         /// <summary>
         /// 列举源目录和目标目录不同的文件，并且把相同的但是修改时间不同的文件改名用于备份
         /// </summary>
         private void listDiferrences()
         {
-            List<string> tempBackupedFileName = backupedFileName;
-            List<DateTime> TempBackupedFileLastWriteTime = backupedFileLastWriteTime;
-            List<long> TempBackupedFileLength = backupedFileLength;
+            List<string> tempBackupedFileName = new List<string>(backupedFileName);
+            List<DateTime> TempBackupedFileLastWriteTime = new List<DateTime>(backupedFileLastWriteTime);
+            List<long> TempBackupedFileLength = new List<long>(backupedFileLength);
             // int n = backupedFileName.Count;
             //列举每一个源目录里的文件，寻找目标目录是否有相同的文件
             for (int i = 0; i < fileName.Count; i++)
             {
-                winMain.CurrentFileCount = "正在查找：" + i.ToString() + "/" + fileName.Count.ToString();
+                winMain.CurrentFileCount = "正在查找：" + i.ToString() + "/" + (fileName.Count + aloneFiles.Count).ToString();
 
-                for (int j = 0; j < backupedFileName.Count; j++)//列举目标目录文件
-                {
-                    FileInfo targetFile = new FileInfo(targetDirectory + "\\" + fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#") + fileName[i]);
-                    //                                               目标目录                             源目录                替换掉不同的部分              把冒号替换             把斜杠替换    加上名字
-                    if (!fileDirectories.Contains(fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#")))
+                FileInfo targetFile = new FileInfo(targetDirectory + "\\" + fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#") + fileName[i]);
+                //                                               目标目录                             源目录                替换掉不同的部分              把冒号替换             把斜杠替换    加上名字
+                //for (int j = 0; j < backupedFileName.Count; j++)//列举目标目录文件
+                // {
+                //Debug.WriteLine(targetFile.FullName);
+
+                //if (!fileDirectories.Contains(fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#")))
+                //{
+                //    fileDirectories.Add(fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#"));
+                //}
+                if (backupedFileName.Contains(targetFile.FullName.Replace(targetDirectory, ""))) //如果找到相同文件名的文件
                     {
-                        fileDirectories.Add(fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#"));
-                    }
-                    if (backupedFileName[j].EndsWith(fileName[i]))//如果找到相同文件名的文件
-                    {
+                    int j = backupedFileName.IndexOf(targetFile.FullName.Replace(targetDirectory, ""));
                         if (fileLastWriteTime[i] == backupedFileLastWriteTime[j])//如果修改时间相同
                         {
-                            if (fileLength[i] == backupedFileLength[j])//如果文件大小相同
+                                                    if (fileLength[i] == backupedFileLength[j])//如果文件大小相同
                             {
                                 sameFilesIndex.Add(i);
                                 //文件名、文件大小和文件修改时间全部相同，几乎可以证明两个文件相同
-                                sameBackupedFilesIndex.Add(j);
+                                sameBackupedFiles.Add(backupedFileName[j]);
                             }
                             else
                             {
                                 //修改时间相同但是大小不同，应该说是一件比较蹊跷的事，但是还是考虑一下
                                 targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension);
-                                appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension);
+                                appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension + "，因为文件长度不同");
                             }
                         }
                         else
@@ -276,25 +297,60 @@ namespace 自动备份系统
                             //如果文件名一样但是修改时间变新了，说明后来修改过文件
                             //此时要把原来的文件加上时间标签重命名
                             targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
-                            appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
-                            //winMain.log.Append(DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "[" + taskName + "]                已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + System.Environment.NewLine + System.Environment.NewLine);
+                            appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + "，因为文件修改时间不同");
                         }
                         backupedFileName.RemoveAt(j);
                         backupedFileLength.RemoveAt(j);
                         backupedFileLastWriteTime.RemoveAt(j);
                         continue;
                     }
-
-                }
-
+                //}
             }
+
+            //for (int i = 0; i < aloneFiles.Count; i++)
+            //{
+            //    FileInfo targetFile = new FileInfo(targetDirectory + "\\" + aloneFiles[i].FullName.Replace(aloneFiles[i].Name, "").Replace(":", "#C#").Replace("\\", "#S#") + "\\" + aloneFiles[i].Name);
+            //    //                                               目标目录                             源目录                替换掉不同的部分              把冒号替换             把斜杠替换     单独的文件加上单独文件夹    加上名字
+            //    for (int j = 0; j < backupedFileName.Count; j++)//列举目标目录文件
+            //    {
+            //        if (backupedFileName[j].EndsWith(fileName[i]))//如果找到相同文件名的文件
+            //        {
+            //            if (fileLastWriteTime[i] == backupedFileLastWriteTime[j])//如果修改时间相同
+            //            {
+            //                if (fileLength[i] == backupedFileLength[j])//如果文件大小相同
+            //                {
+            //                    sameFilesIndex.Add(i);
+            //                    //文件名、文件大小和文件修改时间全部相同，几乎可以证明两个文件相同
+            //                    sameBackupedFiles.Add(backupedFileName[j]);
+            //                }
+            //                else
+            //                {
+            //                    //修改时间相同但是大小不同，应该说是一件比较蹊跷的事，但是还是考虑一下
+            //                    targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension);
+            //                    appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension + "，因为文件长度不同");
+            //                }
+            //            }
+            //            else
+            //            {
+            //                //如果文件名一样但是修改时间变新了，说明后来修改过文件
+            //                //此时要把原来的文件加上时间标签重命名
+            //                targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
+            //                appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + "，因为文件修改时间不同");
+            //            }
+            //            backupedFileName.RemoveAt(j);
+            //            backupedFileLength.RemoveAt(j);
+            //            backupedFileLastWriteTime.RemoveAt(j);
+            //            continue;
+            //        }
+
+            
+            //    }
+            //}
             appendLog("共发现" + sameFilesIndex.Count + "个文件没有更新");
             backupedFileLastWriteTime = TempBackupedFileLastWriteTime;
             backupedFileLength = TempBackupedFileLength;
             backupedFileName = tempBackupedFileName;
         }
-
-
 
         /// <summary>
         /// 列举并且重命名那些旧的备份
@@ -304,28 +360,20 @@ namespace 自动备份系统
 
             for (int i = 0; i < backupedFileName.Count; i++)//循环每一个备份文件
             {
-                if (!sameBackupedFilesIndex.Contains(i))//如果文件发生了改变
+                if (!sameBackupedFiles.Contains(backupedFileName[i]))//如果文件发生了改变
                 {
-                    foreach (var j in fileDirectories)//循环每一个备份目录
-                    {
-                        if (backupedFileName[i].Contains(j) && !backupedFileName[i].Contains("OldBackupedFile#"))//如果确实是在备份目录下的文件（为了防止把其他文件改掉）而且是没有改过名的文件
+                        if (!backupedFileName[i].Contains("OldBackupedFile#"))//如果确实是在备份目录下的文件（为了防止把其他文件改掉）而且是没有改过名的文件
                         {
                             FileInfo targetFile = new FileInfo(targetDirectory + backupedFileName[i]);
-                            targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
-                            appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
+                            targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension==""?" ": targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
+                            appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension == "" ? " " : targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension+"，因为文件已经不存在");
                             continue;
-                        }
                     }
 
                 }
             }
         }
-
-
-
-
-
-
+        
         /// <summary>
         /// 备份差异项
         /// </summary>
