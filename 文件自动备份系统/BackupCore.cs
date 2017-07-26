@@ -132,7 +132,7 @@ namespace 自动备份系统
             }
             catch (Exception ex)
             {
-                appendLog("在列举源目录里的文件时发生异常：" + ex.Message);
+                appendLog("在列举源目录里的文件时发生异常：" + ex.ToString());
                 appendLog("备份失败");
                 goto finish;
             }
@@ -145,7 +145,7 @@ namespace 自动备份系统
             }
             catch (Exception ex)
             {
-                appendLog("在列举备份目录里的文件时发生异常：" + ex.Message);
+                appendLog("在列举备份目录里的文件时发生异常：" + ex.ToString());
                 appendLog("备份失败");
                 goto finish;
             }
@@ -156,7 +156,7 @@ namespace 自动备份系统
         }
             catch (Exception ex)
             {
-                appendLog("在列举不同文件并重命名时发生异常：" + ex.Message);
+                appendLog("在列举不同文件并重命名时发生异常：" + ex.ToString());
                 appendLog("备份失败");
                 goto finish;
             }
@@ -167,7 +167,7 @@ namespace 自动备份系统
         }
             catch (Exception ex)
             {
-                appendLog("在列举并重命名旧的备份文件时发生异常：" + ex.Message);
+                appendLog("在列举并重命名旧的备份文件时发生异常：" + ex.ToString());
                 appendLog("备份失败");
                 goto finish;
             }
@@ -252,7 +252,7 @@ namespace 自动备份系统
         List<string> sameBackupedFiles = new List<string>();
         List<string> sameAloneBackupedFiles = new List<string>();
         List<string> haveMoved = new List<string>();
-        // List<string> fileDirectories = new List<string>();
+        List<string> fileDirectories = new List<string>();
 
         /// <summary>
         /// 列举源目录和目标目录不同的文件，并且把相同的但是修改时间不同的文件改名用于备份
@@ -273,10 +273,10 @@ namespace 自动备份系统
                 // {
                 //Debug.WriteLine(targetFile.FullName);
 
-                //if (!fileDirectories.Contains(fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#")))
-                //{
-                //    fileDirectories.Add(fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#"));
-                //}
+                if (!fileDirectories.Contains(fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#")))
+                {
+                    fileDirectories.Add(fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#"));
+                }
                 if (backupedFileName.Contains(targetFile.FullName.Replace(targetDirectory, ""))) //如果找到相同文件名的文件
                 {
                     int j = backupedFileName.IndexOf(targetFile.FullName.Replace(targetDirectory, ""));
@@ -315,7 +315,8 @@ namespace 自动备份系统
                 winMain.CurrentFileCount = "正在查找：" + (i+fileName.Count).ToString() + "/" + (fileName.Count + aloneFiles.Count).ToString();
                 FileInfo targetFile = new FileInfo(targetDirectory + "\\" + aloneFiles[i].FullName.Replace(aloneFiles[i].Name, "").Replace(":", "#C#").Replace("\\", "#S#") + "\\" + aloneFiles[i].Name);
                 //                                               目标目录                             源目录                替换掉不同的部分              把冒号替换             把斜杠替换     单独的文件加上单独文件夹    加上名字
-                
+                fileDirectories.Add(aloneFiles[i].FullName.Replace(aloneFiles[i].Name, "").Replace(":", "#C#").Replace("\\", "#S#"));
+
                 if (backupedFileName.Contains(targetFile.FullName.Replace(targetDirectory, ""))) //如果找到相同文件名的文件
                 {
                     int j = backupedFileName.IndexOf(targetFile.FullName.Replace(targetDirectory, ""));
@@ -360,15 +361,21 @@ namespace 自动备份系统
 
             for (int i = 0; i < backupedFileName.Count; i++)//循环每一个备份文件
             {
-                if ((!sameBackupedFiles.Contains(backupedFileName[i]) && (!sameAloneBackupedFiles.Contains(backupedFileName[i])) && (!backupedFileName[i].Contains("OldBackupedFile#"))) && (!haveMoved.Contains(targetDirectory+ backupedFileName[i])))//如果文件发生了改变
+                foreach (var j in fileDirectories)//循环每一个备份目录
                 {
-                        
-                            FileInfo targetFile = new FileInfo(targetDirectory + backupedFileName[i]);
-                            targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension==""?" ": targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
-                            appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension == "" ? " " : targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension+"，因为文件已经不存在");
-                            continue;
-                    
+                    if (backupedFileName.Contains(j)/*文件在备份目录中*/ 
+                        && (!sameBackupedFiles.Contains(backupedFileName[i]) 
+                        && (!sameAloneBackupedFiles.Contains(backupedFileName[i]))/*文件不在相同部分中*/ 
+                        && (!backupedFileName[i].Contains("OldBackupedFile#")))/*文件不是备份过的文件*/
+                        && (!haveMoved.Contains(targetDirectory + backupedFileName[i]))/*文件不是刚刚重命名过的文件*/)
+                    {
 
+                        FileInfo targetFile = new FileInfo(targetDirectory + backupedFileName[i]);
+                        targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension == "" ? " " : targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
+                        appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension == "" ? " " : targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + "，因为文件已经不存在");
+                        continue;
+
+                    }
                 }
             }
         }
@@ -401,12 +408,12 @@ namespace 自动备份系统
                 }
                 catch (System.IO.IOException IOEx)
                 {
-                    appendLog("在复制文件时发生读写异常：" + IOEx.Message);
+                    appendLog("在复制文件时发生读写异常：" + IOEx.ToString());
                     return false;
                 }
                 catch (Exception ex)
                 {
-                    appendLog("在复制文件时发生异常：" + ex.Message);
+                    appendLog("在复制文件时发生异常：" + ex.ToString());
                     return false;
                 }
                 appendLog("已复制" + fullFileName[i] + "到" + targetFile.FullName);
@@ -433,12 +440,12 @@ namespace 自动备份系统
                 }
                 catch (System.IO.IOException IOEx)
                 {
-                    appendLog("在复制文件时发生读写异常：" + IOEx.Message);
+                    appendLog("在复制文件时发生读写异常：" + IOEx.ToString());
                     return false;
                 }
                 catch (Exception ex)
                 {
-                    appendLog("在复制文件时发生异常：" + ex.Message);
+                    appendLog("在复制文件时发生异常：" + ex.ToString());
                     return false;
                 }
                 appendLog("已复制" + aloneFiles[i].FullName + "到" + targetFile.FullName);

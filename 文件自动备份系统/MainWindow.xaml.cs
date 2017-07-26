@@ -171,12 +171,13 @@ namespace 自动备份系统
 
                 if (itemsLastTime[i] == 0)//如果时间到了
                 {
-                    if (CurrentBackupThreads == 0)
+                    if (CurrentBackupThreads == 0)//如果没有正在备份
                     {
-                        if (!Directory.Exists(TaskData[i].TargetDirectories))
+                        if (!Directory.Exists(TaskData[i].TargetDirectories))//如果不存在目标目录
                         {
                             try
                             {
+                                //尝试去创建
                                 Directory.CreateDirectory(TaskData[i].TargetDirectories);
                             }
                             catch
@@ -186,18 +187,47 @@ namespace 自动备份系统
                                 AppendLog(itemsName[i], "目标目录不存在且无法创建，将在下一个周期重试。");
                                 txtLogPanel.Text = log.ToString();
                                 lvwTasks.Items.Refresh();
-                                return;
+                                continue;
+                            }
+
+                           
+                        }
+                        else//如果目录存在
+                        {
+                            //如果校验失败
+                            if (!System.IO.File.Exists(TaskData[i].TargetDirectories + "\\" + "FileBackuper_" + TaskData[i].Name))
+                            {
+                                MessageBoxResult mbrContinue = MessageBox.Show("没有找到备份文件记录，可能是分区发生了改变。" + Environment.NewLine + "继续备份可能造成损失。" + Environment.NewLine + "是否继续？", "校验失败", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                                MessageBoxResult mbrCreatNew= MessageBox.Show("是否创建新的校验文件？" + Environment.NewLine + "请手动清理备份目录。" , "校验失败", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                                if(mbrCreatNew==MessageBoxResult.Yes)
+                                {
+                                    System.IO.File.Create(TaskData[i].TargetDirectories + "\\" + "FileBackuper_" + TaskData[i].Name);
+
+                                }
+                                if (mbrContinue == MessageBoxResult.No || mbrContinue==MessageBoxResult.None)
+                              
+                                {
+                                    itemsLastTime[itemsName.IndexOf(itemsName[i])] = -2;
+                                    AppendLog(itemsName[i], "校验失败：不存在文件：" + TaskData[i].TargetDirectories + "\\" + "FileBackuper_" + TaskData[i].Name);
+                                    txtLogPanel.Text = log.ToString();
+                                    lvwTasks.Items.Refresh();
+                                    continue;
+                                }
+                               
+                            }
+                            else
+                            {
+                                 itemsLastTime[i] = -1;//标记正在备份
+                                CurrentBackupThreads++;//标记有备份线程运行中
+                                BackupCore bc = new BackupCore(this);
+                                backupThread = new Thread(new ParameterizedThreadStart(bc.Backup));
+                                backupThread.Start(itemsName[i]);
+                                currentTaskIndex = i;
+                                TaskData[i].State = "正在准备";
+                                stopAll.IsEnabled = true;
                             }
                         }
-
-                        itemsLastTime[i] = -1;//标记正在备份
-                        CurrentBackupThreads++;//标记有备份线程运行中
-                        BackupCore bc = new BackupCore(this);
-                        backupThread = new Thread(new ParameterizedThreadStart(bc.Backup));
-                        backupThread.Start(itemsName[i]);
-                        currentTaskIndex = i;
-                        TaskData[i].State = "正在准备";
-                        stopAll.IsEnabled = true;
+                       
 
                     }
                     else//如果正在备份其他的东西
@@ -214,13 +244,17 @@ namespace 自动备份系统
                     }
 
                 }
-                else//如果本项正在备份
+                else if(itemsLastTime[i]==-1)//如果本项正在备份
                 {
                     TaskData[i].State = CurrentFileCount;
                     if (!txtLogPanel.IsFocused)
                     {
                         txtLogPanel.ScrollToEnd();
                     }
+                }
+                else//暂停
+                {
+
                 }
                 txtLogPanel.Text = log.ToString();
                 lvwTasks.Items.Refresh();
@@ -551,11 +585,11 @@ namespace 自动备份系统
                 //Debug.WriteLine(Path);
                 if (System.IO.File.Exists(Path + "\\FileBackuper.lnk"))
                 {
-                    MessageBox.Show("成功", "错误", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("成功", "结果", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show("失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("失败", "结果", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             else
@@ -565,11 +599,11 @@ namespace 自动备份系统
                 System.IO.File.Delete(Path + "\\FileBackuper.lnk");
                 if (System.IO.File.Exists(Path + "\\FileBackuper.lnk"))
                 {
-                    MessageBox.Show("失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("失败", "结果", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 else
                 {
-                    MessageBox.Show("成功", "错误", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("成功", "结果", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
 
             }
