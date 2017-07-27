@@ -372,7 +372,7 @@ namespace 自动备份系统
 
                         FileInfo targetFile = new FileInfo(targetDirectory + backupedFileName[i]);
                         targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension == "" ? " " : targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
-                        appendLog("已重命名" + targetFile.FullName.Replace(targetFile.Extension == "" ? " " : targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + "，因为文件已经不存在");
+                        appendLog("已重命名" + targetFile.FullName+ "，因为文件已经不存在");
                         continue;
 
                     }

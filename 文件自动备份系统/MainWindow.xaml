@@ -5,9 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:自动备份系统"
         mc:Ignorable="d"
-        Title="文件自动备份系统" Height="768" Width="1366 "
+        Title="文件自动备份系统" 
+        Height="540" Width="1280 "
+        MinHeight="300" MinWidth=" 300"
         Loaded="MainWindowLoadedEventHandler"
-        Closing="MainWindowClosingEventHandler">
+        Closing="MainWindowClosingEventHandler" 
+        WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
         <ControlTemplate x:Key="tmpForThumb" TargetType="{x:Type Thumb}">
