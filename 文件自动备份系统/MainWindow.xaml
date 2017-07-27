@@ -236,11 +236,15 @@
             <TextBlock/>
             <Button Content="启停计时"  Width="64" Height="24" Click="PauseTimerButtonClickEventHandler"/>
             <TextBlock/>
+            <Button x:Name="btnPauseCurrent" Content="启停当前"  Width="64" Height="24" Click="PauseCurrentTimerButtonClickEventHandler" IsEnabled="False"/>
+            <TextBlock/>
             <Button x:Name="stopAll" Content="停止所有"  Width="64" Height="24" Click="StopThreadButtonClickEventHandler" IsEnabled="False"/>
             <TextBlock/>
             <Button x:Name="btnForceToExecute" Content="强制执行"  Width="64" Height="24" Click="ForceToExecuteButtonClickEventHandler" IsEnabled="False"/>
             <TextBlock/>
-            
+            <Button x:Name="btnOpenTargetDirectory"  Content="目标目录"  Width="64" Height="24" Click="btnOpenTargetDirectoryClickEventHandler"  IsEnabled="False"/>
+            <TextBlock/>
+
             <TextBlock Text="程序" HorizontalAlignment="Center"/>
             <Line Stroke="Black" StrokeThickness="1" X1="0" Y1="0" X2="64" Y2="0"/>
             <TextBlock/>

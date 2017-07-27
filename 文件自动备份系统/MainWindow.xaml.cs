@@ -142,7 +142,7 @@ namespace 自动备份系统
                     System.Windows.Forms.SendKeys.SendWait("{ENTER}");
                 }
             }
-           // this.Margin = new Thickness(300);
+            // this.Margin = new Thickness(300);
 
             // }
             //if (this.Visibility == Visibility.Visible)
@@ -162,7 +162,7 @@ namespace 自动备份系统
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            if(CurrentBackupThreads==0)
+            if (CurrentBackupThreads == 0)
             {
                 stopAll.IsEnabled = false;
             }
@@ -183,14 +183,14 @@ namespace 自动备份系统
                             catch
                             {
 
-                                itemsLastTime[itemsName.IndexOf(itemsName[i])] = int.Parse(cfa.AppSettings.Settings[itemsName[i] + "_Interval"].Value);
+                                itemsLastTime[i/*itemsName.IndexOf(itemsName[i])*/] = int.Parse(cfa.AppSettings.Settings[itemsName[i] + "_Interval"].Value);
                                 AppendLog(itemsName[i], "目标目录不存在且无法创建，将在下一个周期重试。");
                                 txtLogPanel.Text = log.ToString();
                                 lvwTasks.Items.Refresh();
                                 continue;
                             }
 
-                           
+
                         }
                         else//如果目录存在
                         {
@@ -198,14 +198,14 @@ namespace 自动备份系统
                             if (!System.IO.File.Exists(TaskData[i].TargetDirectories + "\\" + "FileBackuper_" + TaskData[i].Name))
                             {
                                 MessageBoxResult mbrContinue = MessageBox.Show("没有找到备份文件记录，可能是分区发生了改变。" + Environment.NewLine + "继续备份可能造成损失。" + Environment.NewLine + "是否继续？", "校验失败", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                                MessageBoxResult mbrCreatNew= MessageBox.Show("是否创建新的校验文件？" + Environment.NewLine + "请手动清理备份目录。" , "校验失败", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                                if(mbrCreatNew==MessageBoxResult.Yes)
+                                MessageBoxResult mbrCreatNew = MessageBox.Show("是否创建新的校验文件？" + Environment.NewLine + "请手动清理备份目录。", "校验失败", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                                if (mbrCreatNew == MessageBoxResult.Yes)
                                 {
                                     System.IO.File.Create(TaskData[i].TargetDirectories + "\\" + "FileBackuper_" + TaskData[i].Name);
 
                                 }
-                                if (mbrContinue == MessageBoxResult.No || mbrContinue==MessageBoxResult.None)
-                              
+                                if (mbrContinue == MessageBoxResult.No || mbrContinue == MessageBoxResult.None)
+
                                 {
                                     itemsLastTime[itemsName.IndexOf(itemsName[i])] = -2;
                                     AppendLog(itemsName[i], "校验失败：不存在文件：" + TaskData[i].TargetDirectories + "\\" + "FileBackuper_" + TaskData[i].Name);
@@ -213,11 +213,11 @@ namespace 自动备份系统
                                     lvwTasks.Items.Refresh();
                                     continue;
                                 }
-                               
+
                             }
                             else
                             {
-                                 itemsLastTime[i] = -1;//标记正在备份
+                                itemsLastTime[i] = -1;//标记正在备份
                                 CurrentBackupThreads++;//标记有备份线程运行中
                                 BackupCore bc = new BackupCore(this);
                                 backupThread = new Thread(new ParameterizedThreadStart(bc.Backup));
@@ -227,7 +227,7 @@ namespace 自动备份系统
                                 stopAll.IsEnabled = true;
                             }
                         }
-                       
+
 
                     }
                     else//如果正在备份其他的东西
@@ -244,7 +244,7 @@ namespace 自动备份系统
                     }
 
                 }
-                else if(itemsLastTime[i]==-1)//如果本项正在备份
+                else if (itemsLastTime[i] == -1)//如果本项正在备份
                 {
                     TaskData[i].State = CurrentFileCount;
                     if (!txtLogPanel.IsFocused)
@@ -254,7 +254,7 @@ namespace 自动备份系统
                 }
                 else//暂停
                 {
-
+                    TaskData[i].State = "暂停";
                 }
                 txtLogPanel.Text = log.ToString();
                 lvwTasks.Items.Refresh();
@@ -271,6 +271,8 @@ namespace 自动备份系统
             btnDeleteTask.IsEnabled = false;
             btnEditTask.IsEnabled = false;
             btnForceToExecute.IsEnabled = false;
+            btnPauseCurrent.IsEnabled = false;
+            btnOpenTargetDirectory.IsEnabled = false;
             if (cfa.AppSettings.Settings["Items"] != null)//如果不是第一次运行的话
             {
                 foreach (var i in cfa.AppSettings.Settings["Items"].Value.Split(new string[] { "#Split#" }, StringSplitOptions.RemoveEmptyEntries))
@@ -281,6 +283,11 @@ namespace 自动备份系统
 
                 foreach (var i in itemsName)
                 {
+                    if (cfa.AppSettings.Settings[i + "_State"] == null)
+                    {
+                        cfa.AppSettings.Settings.Add(i + "_State", "true");
+                    }
+                    cfa.Save();
                     if (cfa.AppSettings.Settings[i + "_Black"].Value == "")
                     {
                         TaskData.Add(new TaskInfo
@@ -291,7 +298,7 @@ namespace 自动备份系统
 (cfa.AppSettings.Settings[i + "_White"].Value.Remove(cfa.AppSettings.Settings[i + "_White"].Value.Length - 7, 7)).Replace("#Split#", "、"),
                             TargetDirectories = cfa.AppSettings.Settings[i + "_TargetDirectory"].Value,
                             Interval = new TimeSpan(0, 0, int.Parse(cfa.AppSettings.Settings[i + "_Interval"].Value)).ToString(),
-                            State = "就绪"
+                            State = cfa.AppSettings.Settings[i + "_State"].Value == "false" ? "就绪" : "暂停"
                         });
                     }
                     else
@@ -306,14 +313,21 @@ namespace 自动备份系统
         .Replace("#Split#", "、"),
                             TargetDirectories = cfa.AppSettings.Settings[i + "_TargetDirectory"].Value,
                             Interval = new TimeSpan(0, 0, int.Parse(cfa.AppSettings.Settings[i + "_Interval"].Value)).ToString(),
-                            State = "就绪"
+                            State = cfa.AppSettings.Settings[i + "_State"].Value == "false" ? "就绪" : "暂停"
                         });
 
                     }
 
 
+                    if (cfa.AppSettings.Settings[i + "_State"].Value == "false")
+                    {
+                        itemsLastTime.Add(-2);
+                    }
+                    else
+                    {
+                        itemsLastTime.Add(int.Parse(cfa.AppSettings.Settings[i + "_Interval"].Value));
 
-                    itemsLastTime.Add(int.Parse(cfa.AppSettings.Settings[i + "_Interval"].Value));
+                    }
 
                 }
             }
@@ -361,7 +375,7 @@ namespace 自动备份系统
         {
             backupThread.Abort();
             CurrentBackupThreads = 0;
-            itemsLastTime[currentTaskIndex] = int.Parse(cfa.AppSettings.Settings[TaskData[currentTaskIndex].Name+"_Interval"].Value);
+            itemsLastTime[currentTaskIndex] = int.Parse(cfa.AppSettings.Settings[TaskData[currentTaskIndex].Name + "_Interval"].Value);
         }
         /// <summary>
         /// 单击暂停时间按钮
@@ -474,6 +488,8 @@ namespace 自动备份系统
                 btnDeleteTask.IsEnabled = true;
                 btnEditTask.IsEnabled = true;
                 btnForceToExecute.IsEnabled = true;
+                btnPauseCurrent.IsEnabled = true;
+                btnOpenTargetDirectory.IsEnabled = true;
             }
         }
         #endregion 任务相关按钮等控件事件
@@ -565,6 +581,7 @@ namespace 自动备份系统
         private void MainWindowClosingEventHandler(object sender, System.ComponentModel.CancelEventArgs e)
         {
             e.Cancel = true;
+            cfa.Save();
             this.Visibility = Visibility.Hidden;
         }
 
@@ -613,6 +630,30 @@ namespace 自动备份系统
         {
             cfa.AppSettings.Settings["AutoMinimum"].Value = cbxMinimum.IsChecked == true ? "true" : "false";
             cfa.Save();
+        }
+
+        private void PauseCurrentTimerButtonClickEventHandler(object sender, RoutedEventArgs e)
+        {
+            //itemsLastTime[lvwTasks.SelectedIndex] =
+            //    itemsLastTime[lvwTasks.SelectedIndex] == -2 ?
+            //    int.Parse(cfa.AppSettings.Settings[itemsName[lvwTasks.SelectedIndex] + "_Interval"].Value) : -2;
+            if (itemsLastTime[lvwTasks.SelectedIndex] == -2)
+            {
+                itemsLastTime[lvwTasks.SelectedIndex] = int.Parse(cfa.AppSettings.Settings[itemsName[lvwTasks.SelectedIndex] + "_Interval"].Value);
+                cfa.AppSettings.Settings[itemsName[lvwTasks.SelectedIndex] + "_State"].Value = "true";
+            }
+            else
+            {
+                itemsLastTime[lvwTasks.SelectedIndex] = -2;
+                cfa.AppSettings.Settings[itemsName[lvwTasks.SelectedIndex] + "_State"].Value = "false";
+
+            }
+            cfa.Save();
+        }
+
+        private void btnOpenTargetDirectoryClickEventHandler(object sender, RoutedEventArgs e)
+        {
+            Process.Start("explorer.exe", TaskData[lvwTasks.SelectedIndex].TargetDirectories);
         }
     }
 }

@@ -293,7 +293,7 @@ namespace 自动备份系统
                             //修改时间相同但是大小不同，应该说是一件比较蹊跷的事，但是还是考虑一下
                             haveMoved.Add(targetFile.FullName);
                             targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension);
-                            appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension + "，因为文件长度不同");
+                            appendLog("已重命名"  + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension + "，因为文件长度不同");
                         }
                     }
                     else
@@ -302,7 +302,7 @@ namespace 自动备份系统
                         //此时要把原来的文件加上时间标签重命名
                         haveMoved.Add(targetFile.FullName);
                         targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
-                        appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + "，因为文件修改时间不同");
+                        appendLog("已重命名" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + "，因为文件修改时间不同");
                     }
 
                     continue;
@@ -333,7 +333,7 @@ namespace 自动备份系统
                             //修改时间相同但是大小不同，应该说是一件比较蹊跷的事，但是还是考虑一下
                             haveMoved.Add(targetFile.FullName);
                             targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension);
-                            appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension + "，因为文件长度不同");
+                            appendLog("已重命名" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension + "，因为文件长度不同");
                         }
                     }
                     else
@@ -342,7 +342,7 @@ namespace 自动备份系统
                         //此时要把原来的文件加上时间标签重命名
                         haveMoved.Add(targetFile.FullName);
                         targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
-                        appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + "，因为文件修改时间不同");
+                        appendLog("已重命名" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + "，因为文件修改时间不同");
                     }
 
                     continue;
@@ -363,7 +363,7 @@ namespace 自动备份系统
             {
                 foreach (var j in fileDirectories)//循环每一个备份目录
                 {
-                    if (backupedFileName.Contains(j)/*文件在备份目录中*/ 
+                    if (backupedFileName[i].Contains(j)/*文件在备份目录中*/ 
                         && (!sameBackupedFiles.Contains(backupedFileName[i]) 
                         && (!sameAloneBackupedFiles.Contains(backupedFileName[i]))/*文件不在相同部分中*/ 
                         && (!backupedFileName[i].Contains("OldBackupedFile#")))/*文件不是备份过的文件*/
@@ -372,7 +372,7 @@ namespace 自动备份系统
 
                         FileInfo targetFile = new FileInfo(targetDirectory + backupedFileName[i]);
                         targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension == "" ? " " : targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
-                        appendLog("已重命名" + targetFile.FullName + "为" + targetFile.FullName.Replace(targetFile.Extension == "" ? " " : targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + "，因为文件已经不存在");
+                        appendLog("已重命名" + targetFile.FullName.Replace(targetFile.Extension == "" ? " " : targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + "，因为文件已经不存在");
                         continue;
 
                     }

@@ -214,7 +214,10 @@ namespace 自动备份系统
                 return;
             }
 
-
+            if (cfa.AppSettings.Settings[txtName.Text + "_State"] == null)
+            {
+                cfa.AppSettings.Settings.Add(new KeyValueConfigurationElement(txtName.Text + "_State","true"));
+            }
 
             string white = "";
             foreach (var i in lvwWhite.Items)
