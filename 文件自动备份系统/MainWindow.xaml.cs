@@ -526,7 +526,7 @@ namespace 自动备份系统
         {
 
             //XmlNode currentLog;
-            if (System.IO.File.Exists("log.xml"))
+            if (!System.IO.File.Exists("log.xml"))
             {
                 XmlDeclaration xdec = xml.CreateXmlDeclaration("1.0", "UTF-8", null);
                 xml.AppendChild(xdec);
@@ -542,7 +542,7 @@ namespace 自动备份系统
             {
                 lbxLogList.Items.Add(root.ChildNodes[i].Name);
             }
-            //xml.Save("log.xml");
+            xml.Save("log.xml");
 
         }
 

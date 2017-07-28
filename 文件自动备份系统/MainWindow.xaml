@@ -112,7 +112,7 @@
                     <Style.Setters>
                         <EventSetter  Event="PreviewMouseLeftButtonUp" Handler="LvwTaskPreviewMouseLeftButtonUpEventHandler" />
                         <EventSetter Event="PreviewKeyDown" Handler="LvwTaskItemPreviewKeyDownEventHandler"/>
-                        <EventSetter Event="PreviewMouseDoubleClick" Handler="LvwTasksItemPreviewMouseDoubleClickEventHandler"/>
+                        <EventSetter Event="MouseDoubleClick" Handler="LvwTasksItemPreviewMouseDoubleClickEventHandler"/>
                         <Setter Property="SnapsToDevicePixels" Value="True"/>
                         <Setter Property="Template">
                             <Setter.Value>
