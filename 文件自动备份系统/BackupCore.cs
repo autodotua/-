@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Xml;
 
 namespace 自动备份系统
@@ -26,7 +27,7 @@ namespace 自动备份系统
             // }
 
         }
-        XmlDocument xml = new XmlDocument();
+        public XmlDocument xml = new XmlDocument();
         XmlNode currentLog;
         string taskName;
         //用于读取配置文件
@@ -55,10 +56,37 @@ namespace 自动备份系统
             xe.SetAttribute("Time", DateTime.Now.ToString() + "." + DateTime.Now.Millisecond);
             xe.SetAttribute("Event", value);
             currentLog.AppendChild(xe);
-            winMain.log.Append("[" + taskName + "]" + DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "                 " + value + System.Environment.NewLine + System.Environment.NewLine);
+            //winMain.log.Append("[" + taskName + "]" + DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "                 " + value + Environment.NewLine + Environment.NewLine);
+
+            Thread t = new Thread(new ParameterizedThreadStart( refreshWinMainTxtLog));
+               t.Start("[" + taskName + "]" + DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "                 " + value);
+
+
         }
 
-        
+        private void refreshWinMainTxtLog(object obj)
+        {
+            winMain.txtLogPanel.Dispatcher.Invoke(new Action(() =>
+            {
+                if(winMain.txtLogPanel.LineCount>=200)
+                {
+                    int count = 0;
+                    for (int i = 0; i <100; i++)
+                    {
+                        count += winMain.txtLogPanel.GetLineLength(i);
+                    }
+                    winMain.txtLogPanel.Text = winMain.txtLogPanel.Text.Remove(0, count);
+                    xml.Save("log.xml");
+                }
+                winMain.txtLogPanel.Text += obj.ToString() + Environment.NewLine;
+                //if (!winMain.txtLogPanel.IsFocused)
+                //{
+                //    winMain.txtLogPanel.ScrollToEnd();
+                //}
+            }));
+
+
+        }
 
         public void Backup(object name)
         {
@@ -71,6 +99,8 @@ namespace 自动备份系统
 
             appendLog("开始备份");
             //获取黑白名单目录
+            Thread t = new Thread(new ParameterizedThreadStart(changeStatusText));
+            t.Start("正在查找文件");
             string tempWhiteListViewItems;
             tempWhiteListViewItems = cfa.AppSettings.Settings[name + "_White"] != null ? cfa.AppSettings.Settings[name + "_White"].Value : "";
             foreach (var i in tempWhiteListViewItems.Split(new string[] { "#Split#" }, StringSplitOptions.RemoveEmptyEntries))
@@ -187,6 +217,9 @@ namespace 自动备份系统
             //重新开始计时
             winMain.itemsLastTime[winMain.itemsName.IndexOf(taskName)] = int.Parse(cfa.AppSettings.Settings[taskName + "_Interval"].Value);
 
+            Thread t2 = new Thread(new ParameterizedThreadStart(changeStatusText));
+
+            t2.Start("就绪");
 
         }
         
@@ -403,10 +436,13 @@ namespace 自动备份系统
                         //如果目标文件的目录不存在的话就创建一个，否则会报异常
                         targetFile.Directory.Create();
                     }
+                    Thread t = new Thread(new ParameterizedThreadStart(changeStatusText));
+                    t.Start("正在复制文件：" + fullFileName[i]);
+
                     //复制文件
                     File.Copy(fullFileName[i], targetFile.FullName);
                 }
-                catch (System.IO.IOException IOEx)
+                catch (IOException IOEx)
                 {
                     appendLog("在复制文件时发生读写异常：" + IOEx.ToString());
                     return false;
@@ -435,10 +471,15 @@ namespace 自动备份系统
                         //如果目标文件的目录不存在的话就创建一个，否则会报异常
                         targetFile.Directory.Create();
                     }
+                    
+                    Thread t = new Thread(new ParameterizedThreadStart(changeStatusText));
+                    t.Start("正在复制文件："+ aloneFiles[i].FullName);
+
+               
                     //复制文件
                     File.Copy(aloneFiles[i].FullName, targetFile.FullName);
                 }
-                catch (System.IO.IOException IOEx)
+                catch (IOException IOEx)
                 {
                     appendLog("在复制文件时发生读写异常：" + IOEx.ToString());
                     return false;
@@ -456,5 +497,13 @@ namespace 自动备份系统
             return true;
         }
 
+        private void changeStatusText(object value)
+        {
+            winMain.statusText.Dispatcher.Invoke(new Action(() =>
+            {
+                winMain.statusText.Text = value.ToString();
+                
+            }));
+        }
     }
 }

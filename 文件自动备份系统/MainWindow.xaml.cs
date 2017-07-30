@@ -64,11 +64,13 @@ namespace 自动备份系统
         public string CurrentFileCount = "";//用于显示状态，由备份线程控制
         bool pauseTimer = false;
         private System.Windows.Forms.NotifyIcon notifyIcon;
+        BackupCore bc;
+
         #endregion 字段属性声明
 
         private void MainWindowLoadedEventHandler(object sender, RoutedEventArgs e)
         {
-            string tempFileName = System.IO.Path.GetTempFileName();
+            string tempFileName = Path.GetTempFileName();
             FileStream fs = new FileStream(tempFileName, FileMode.Create);
             Properties.Resources.icon.Save(fs);
             fs.Close();
@@ -219,7 +221,7 @@ namespace 自动备份系统
                             {
                                 itemsLastTime[i] = -1;//标记正在备份
                                 CurrentBackupThreads++;//标记有备份线程运行中
-                                BackupCore bc = new BackupCore(this);
+                                 bc = new BackupCore(this);
                                 backupThread = new Thread(new ParameterizedThreadStart(bc.Backup));
                                 backupThread.Start(itemsName[i]);
                                 currentTaskIndex = i;
@@ -247,19 +249,16 @@ namespace 自动备份系统
                 else if (itemsLastTime[i] == -1)//如果本项正在备份
                 {
                     TaskData[i].State = CurrentFileCount;
-                    if (!txtLogPanel.IsFocused)
-                    {
-                        txtLogPanel.ScrollToEnd();
-                    }
                 }
-                else//暂停
+                else//=-2，暂停
                 {
                     TaskData[i].State = "暂停";
                 }
-                txtLogPanel.Text = log.ToString();
-                lvwTasks.Items.Refresh();
+                //Debug.WriteLine(txtLogPanel.LineCount);
+                //txtLogPanel.Text = log.ToString();
+               
             }
-
+            lvwTasks.Items.Refresh();
 
 
         }
@@ -373,7 +372,9 @@ namespace 自动备份系统
         /// <param name="e"></param>
         private void StopThreadButtonClickEventHandler(object sender, RoutedEventArgs e)
         {
+            bc.xml.Save("log.xml");
             backupThread.Abort();
+            statusText.Text = "";
             CurrentBackupThreads = 0;
             itemsLastTime[currentTaskIndex] = int.Parse(cfa.AppSettings.Settings[TaskData[currentTaskIndex].Name + "_Interval"].Value);
         }
@@ -655,6 +656,8 @@ namespace 自动备份系统
         {
             Process.Start("explorer.exe", TaskData[lvwTasks.SelectedIndex].TargetDirectories);
         }
+
+
     }
 }
 
