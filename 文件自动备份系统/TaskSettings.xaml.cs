@@ -195,6 +195,16 @@ namespace 自动备份系统
                     return;
                 }
             }
+            try
+            {
+                File.Create(new DirectoryInfo(txtTargetDirectory.Text).FullName + "\\" + "FileBackuper_" + txtName.Text);
+            }
+            catch
+            {
+                MessageBox.Show("无法创建校验文件！", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+
+            }
             //检查名称
             string tempFileName = System.IO.Path.GetTempFileName();
             using (FileStream fs = new FileStream(tempFileName, FileMode.Create))

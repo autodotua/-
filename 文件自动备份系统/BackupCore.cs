@@ -58,8 +58,8 @@ namespace 自动备份系统
             currentLog.AppendChild(xe);
             //winMain.log.Append("[" + taskName + "]" + DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "                 " + value + Environment.NewLine + Environment.NewLine);
 
-            Thread t = new Thread(new ParameterizedThreadStart( refreshWinMainTxtLog));
-               t.Start("[" + taskName + "]" + DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "                 " + value);
+            new Thread(new ParameterizedThreadStart(refreshWinMainTxtLog))
+             .Start("[" + taskName + "]" + DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "                 " + value);
 
 
         }
@@ -99,8 +99,7 @@ namespace 自动备份系统
 
             appendLog("开始备份");
             //获取黑白名单目录
-            Thread t = new Thread(new ParameterizedThreadStart(changeStatusText));
-            t.Start("正在查找文件");
+            new Thread(new ParameterizedThreadStart(changeStatusText)).Start("正在查找文件");
             string tempWhiteListViewItems;
             tempWhiteListViewItems = cfa.AppSettings.Settings[name + "_White"] != null ? cfa.AppSettings.Settings[name + "_White"].Value : "";
             foreach (var i in tempWhiteListViewItems.Split(new string[] { "#Split#" }, StringSplitOptions.RemoveEmptyEntries))
@@ -217,9 +216,8 @@ namespace 自动备份系统
             //重新开始计时
             winMain.itemsLastTime[winMain.itemsName.IndexOf(taskName)] = int.Parse(cfa.AppSettings.Settings[taskName + "_Interval"].Value);
 
-            Thread t2 = new Thread(new ParameterizedThreadStart(changeStatusText));
-
-            t2.Start("就绪");
+            new Thread(new ParameterizedThreadStart(changeStatusText)).Start("就绪");
+            
 
         }
         
@@ -494,6 +492,9 @@ namespace 自动备份系统
             }
 
             appendLog("备份完成，复制了" + fileCount.ToString() + "个文件");
+             new Thread(new ParameterizedThreadStart(refreshWinMainTxtLog)).Start("");
+           
+
             return true;
         }
 

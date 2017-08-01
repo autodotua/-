@@ -113,7 +113,7 @@ namespace 自动备份系统
             RefreshLog();
             RefreshListView();
             timer.Interval = new TimeSpan(0, 0, 1);
-            timer.Tick += new EventHandler(Timer_Tick);
+            timer.Tick += new EventHandler(MainTimerTickEventHandler);
             timer.Start();
 
         }
@@ -162,11 +162,12 @@ namespace 自动备份系统
         }
 
 
-        private void Timer_Tick(object sender, EventArgs e)
+        private void MainTimerTickEventHandler(object sender, EventArgs e)
         {
             if (CurrentBackupThreads == 0)
             {
                 stopAll.IsEnabled = false;
+                statusText.Text = "就绪";
             }
             for (int i = 0; i < itemsName.Count; i++)
             {
@@ -562,20 +563,54 @@ namespace 自动备份系统
             }
         }
 
+        //private void AppendLog(string taskName, string value)
+        //{
+
+        //    XmlElement xe = xml.CreateElement("log");
+        //    xe.SetAttribute("Time", DateTime.Now.ToString() + "." + DateTime.Now.Millisecond);
+        //    xe.SetAttribute("Event", value);
+        //    XmlNode currentLog = xml.CreateElement(taskName + "--" + DateTime.Now.ToString().Replace("/", "-").Replace(" ", "_").Replace(":", "-"));
+        //    currentLog.AppendChild(xe);
+        //    xml.DocumentElement.AppendChild(currentLog);
+        //    xml.Save("log.xml");
+        //    RefreshLog();
+        //    log.Append("[" + taskName + "]" + DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "                 " + value + System.Environment.NewLine + System.Environment.NewLine);
+        //}
+
         private void AppendLog(string taskName, string value)
         {
-
             XmlElement xe = xml.CreateElement("log");
             xe.SetAttribute("Time", DateTime.Now.ToString() + "." + DateTime.Now.Millisecond);
             xe.SetAttribute("Event", value);
             XmlNode currentLog = xml.CreateElement(taskName + "--" + DateTime.Now.ToString().Replace("/", "-").Replace(" ", "_").Replace(":", "-"));
             currentLog.AppendChild(xe);
-            xml.DocumentElement.AppendChild(currentLog);
-            xml.Save("log.xml");
-            RefreshLog();
-            log.Append("[" + taskName + "]" + DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "                 " + value + System.Environment.NewLine + System.Environment.NewLine);
+            //log.Append("[" + taskName + "]" + DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "                 " + value + Environment.NewLine + Environment.NewLine);
+            Thread t = new Thread(new ParameterizedThreadStart(refreshWinMainTxtLog));
+            t.Start("[" + taskName + "]" + DateTime.Now.ToString() + "." + DateTime.Now.Millisecond + "                 " + value);
+
+
         }
 
+        private void refreshWinMainTxtLog(object obj)
+        {
+            txtLogPanel.Dispatcher.Invoke(new Action(() =>
+            {
+                if (txtLogPanel.LineCount >= 200)
+                {
+                    int count = 0;
+                    for (int i = 0; i < 100; i++)
+                    {
+                        count += txtLogPanel.GetLineLength(i);
+                    }
+                    txtLogPanel.Text = txtLogPanel.Text.Remove(0, count);
+                    xml.Save("log.xml");
+                }
+                txtLogPanel.Text += obj.ToString() + Environment.NewLine + Environment.NewLine;
+
+            }));
+
+
+        }
         #endregion 日志相关事件
 
         #region 程序相关事件
