@@ -692,7 +692,13 @@ namespace 自动备份系统
             Process.Start("explorer.exe", TaskData[lvwTasks.SelectedIndex].TargetDirectories);
         }
 
-
+        private void TxtLogPanelTextChangedEventHandler(object sender, TextChangedEventArgs e)
+        {
+            if(!(sender as TextBox).IsFocused)
+            {
+                (sender as TextBox).ScrollToEnd();
+            }
+        }
     }
 }
 

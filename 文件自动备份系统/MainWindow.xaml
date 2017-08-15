@@ -160,7 +160,7 @@
 
         <TabControl  Grid.Row="2">
             <TabItem Header="当前日志">
-                <TextBox x:Name="txtLogPanel" Grid.Row="2" MouseLeave="TxtLogPaneMouseLeaveEventHandler" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"  PreviewKeyDown="TxtLogPanelPreviewKeyDownEventHandler" />
+                <TextBox x:Name="txtLogPanel" Grid.Row="2" MouseLeave="TxtLogPaneMouseLeaveEventHandler" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"  PreviewKeyDown="TxtLogPanelPreviewKeyDownEventHandler" TextChanged="TxtLogPanelTextChangedEventHandler"/>
             </TabItem>
             <TabItem Header="所有日志">
                 <Grid>
