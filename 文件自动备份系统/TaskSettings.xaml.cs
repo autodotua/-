@@ -318,7 +318,7 @@ if(txtName.IsEnabled)
         Dictionary<TextBox, string> lastString = new Dictionary<TextBox, string>();
         Dictionary<TextBox, int> lastSelectPosition = new Dictionary<TextBox, int>();
         bool isChanging = false;
-        private void txtEnterOnlyPlusIntergerNumberTextChangedEventHandler(object sender, TextChangedEventArgs e)
+        private void TxtEnterOnlyPlusIntergerNumberTextChangedEventHandler(object sender, TextChangedEventArgs e)
         {if(isChanging)
             {
                 return;
@@ -361,7 +361,7 @@ if(txtName.IsEnabled)
             isChanging = false;
         }
 
-        private void txtEnterOnlyPlusIntergerNumberPreviewMouseUpEventHandler(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void TxtEnterOnlyPlusIntergerNumberPreviewMouseUpEventHandler(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             lastSelectPosition[(TextBox)sender] = ((TextBox)sender).SelectionStart;
         }

@@ -61,7 +61,7 @@ namespace 自动备份系统
         public List<int> itemsLastTime = new List<int>();//任务距离下一次时间列表
         System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();//定时器
         public int CurrentBackupThreads = 0;//用于判断是否正在备份
-        public string CurrentFileCount = "";//用于显示状态，由备份线程控制
+        public string CurrentFileCount = "正在处理";//用于显示状态，由备份线程控制
         bool pauseTimer = false;
         private System.Windows.Forms.NotifyIcon notifyIcon;
         BackupCore bc;
@@ -222,7 +222,7 @@ namespace 自动备份系统
                             {
                                 itemsLastTime[i] = -1;//标记正在备份
                                 CurrentBackupThreads++;//标记有备份线程运行中
-                                 bc = new BackupCore(this);
+                                bc = new BackupCore(this);
                                 backupThread = new Thread(new ParameterizedThreadStart(bc.Backup));
                                 backupThread.Start(itemsName[i]);
                                 currentTaskIndex = i;
@@ -257,7 +257,7 @@ namespace 自动备份系统
                 }
                 //Debug.WriteLine(txtLogPanel.LineCount);
                 //txtLogPanel.Text = log.ToString();
-               
+
             }
             lvwTasks.Items.Refresh();
 
@@ -521,9 +521,16 @@ namespace 自动备份系统
         /// <param name="e"></param>
         private void TxtLogPanelPreviewKeyDownEventHandler(object sender, KeyEventArgs e)
         {
+            if ((e.KeyboardDevice.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+                if (e.Key == Key.C)
+                {
+                    return;
+                }
             e.Handled = true;
         }
         XmlDocument xml = new XmlDocument();
+
+
         private void LoadLog()
         {
 
@@ -694,7 +701,7 @@ namespace 自动备份系统
 
         private void TxtLogPanelTextChangedEventHandler(object sender, TextChangedEventArgs e)
         {
-            if(!(sender as TextBox).IsFocused)
+            if (!(sender as TextBox).IsFocused)
             {
                 (sender as TextBox).ScrollToEnd();
             }

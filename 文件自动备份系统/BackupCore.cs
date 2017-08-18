@@ -99,7 +99,8 @@ namespace 自动备份系统
 
             appendLog("开始备份");
             //获取黑白名单目录
-            new Thread(new ParameterizedThreadStart(changeStatusText)).Start("正在查找文件");
+            new Thread(new ParameterizedThreadStart(ChangeStatusText)).Start("正在查找文件");
+            winMain.CurrentFileCount = "正在列举";
             string tempWhiteListViewItems;
             tempWhiteListViewItems = cfa.AppSettings.Settings[name + "_White"] != null ? cfa.AppSettings.Settings[name + "_White"].Value : "";
             foreach (var i in tempWhiteListViewItems.Split(new string[] { "#Split#" }, StringSplitOptions.RemoveEmptyEntries))
@@ -150,11 +151,6 @@ namespace 自动备份系统
                     else
                     {
                         Debug.WriteLine("奇怪的文件夹：" + i);
-                        //FileInfo fif = new FileInfo(i);
-                        //fileName.Add(fif.Name);
-                        //fullFileName.Add(fif.FullName);
-                        //fileLastWriteTime.Add(fif.LastWriteTimeUtc);
-                        //fileLength.Add(fif.Length);
                     }
                 }
                 appendLog("共发现" + fileName.Count + "个需要检查的文件");
@@ -181,7 +177,7 @@ namespace 自动备份系统
             //列举差异项
             try
             {
-                listDiferrences();
+                ListDiferrences();
         }
             catch (Exception ex)
             {
@@ -202,7 +198,7 @@ namespace 自动备份系统
             }
 
             //将不同的部分复制到目标文件夹
-            if (!moveDiferrences())
+            if (!MoveDiferrences())
             {
                 appendLog("备份失败，复制了" + (fileName.Count - sameFilesIndex.Count).ToString() + "个文件");
             }
@@ -216,7 +212,7 @@ namespace 自动备份系统
             //重新开始计时
             winMain.itemsLastTime[winMain.itemsName.IndexOf(taskName)] = int.Parse(cfa.AppSettings.Settings[taskName + "_Interval"].Value);
 
-            new Thread(new ParameterizedThreadStart(changeStatusText)).Start("就绪");
+            new Thread(new ParameterizedThreadStart(ChangeStatusText)).Start("就绪");
             
 
         }
@@ -227,6 +223,8 @@ namespace 自动备份系统
         /// <param name="path"></param>
         private void listFiles(string path)
         {
+        
+
 
             // int n = 0;
             foreach (var i in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
@@ -288,7 +286,7 @@ namespace 自动备份系统
         /// <summary>
         /// 列举源目录和目标目录不同的文件，并且把相同的但是修改时间不同的文件改名用于备份
         /// </summary>
-        private void listDiferrences()
+        private void ListDiferrences()
         {
             //List<string> tempBackupedFileName = new List<string>(backupedFileName);
             //List<DateTime> TempBackupedFileLastWriteTime = new List<DateTime>(backupedFileLastWriteTime);
@@ -297,7 +295,7 @@ namespace 自动备份系统
             //列举每一个源目录里的文件，寻找目标目录是否有相同的文件
             for (int i = 0; i < fileName.Count; i++)
             {
-                winMain.CurrentFileCount = "正在查找：" + i.ToString() + "/" + (fileName.Count + aloneFiles.Count).ToString();
+                winMain.CurrentFileCount = "正在对比：" + i.ToString() + "/" + (fileName.Count + aloneFiles.Count).ToString();
                 FileInfo targetFile = new FileInfo(targetDirectory + "\\" + fullFileName[i].Replace(fileName[i], "").Replace(":", "#C#").Replace("\\", "#S#") + fileName[i]);
                 //                                               目标目录                             源目录                替换掉不同的部分              把冒号替换             把斜杠替换    加上名字
                 //for (int j = 0; j < backupedFileName.Count; j++)//列举目标目录文件
@@ -324,7 +322,7 @@ namespace 自动备份系统
                             //修改时间相同但是大小不同，应该说是一件比较蹊跷的事，但是还是考虑一下
                             haveMoved.Add(targetFile.FullName);
                             targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension);
-                            appendLog("已重命名"  + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension + "，因为文件长度不同");
+                            appendLog("已重命名"  + targetFile.FullName + "，因为文件长度不同");
                         }
                     }
                     else
@@ -333,7 +331,7 @@ namespace 自动备份系统
                         //此时要把原来的文件加上时间标签重命名
                         haveMoved.Add(targetFile.FullName);
                         targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
-                        appendLog("已重命名" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + "，因为文件修改时间不同");
+                        appendLog("已重命名" + targetFile.FullName+ "，因为文件修改时间不同");
                     }
 
                     continue;
@@ -343,7 +341,7 @@ namespace 自动备份系统
 
             for (int i = 0; i < aloneFiles.Count; i++)
             {
-                winMain.CurrentFileCount = "正在查找：" + (i+fileName.Count).ToString() + "/" + (fileName.Count + aloneFiles.Count).ToString();
+                winMain.CurrentFileCount = "正在对比：" + (i+fileName.Count).ToString() + "/" + (fileName.Count + aloneFiles.Count).ToString();
                 FileInfo targetFile = new FileInfo(targetDirectory + "\\" + aloneFiles[i].FullName.Replace(aloneFiles[i].Name, "").Replace(":", "#C#").Replace("\\", "#S#") + "\\" + aloneFiles[i].Name);
                 //                                               目标目录                             源目录                替换掉不同的部分              把冒号替换             把斜杠替换     单独的文件加上单独文件夹    加上名字
                 fileDirectories.Add(aloneFiles[i].FullName.Replace(aloneFiles[i].Name, "").Replace(":", "#C#").Replace("\\", "#S#"));
@@ -364,7 +362,7 @@ namespace 自动备份系统
                             //修改时间相同但是大小不同，应该说是一件比较蹊跷的事，但是还是考虑一下
                             haveMoved.Add(targetFile.FullName);
                             targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension);
-                            appendLog("已重命名" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.Extension + "，因为文件长度不同");
+                            appendLog("已重命名" + targetFile.FullName + "，因为文件长度不同");
                         }
                     }
                     else
@@ -373,7 +371,7 @@ namespace 自动备份系统
                         //此时要把原来的文件加上时间标签重命名
                         haveMoved.Add(targetFile.FullName);
                         targetFile.MoveTo(targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension);
-                        appendLog("已重命名" + targetFile.FullName.Replace(targetFile.Extension, "") + "#OldBackupedFile#" + targetFile.LastWriteTimeUtc.ToFileTimeUtc() + targetFile.Extension + "，因为文件修改时间不同");
+                        appendLog("已重命名" + targetFile+ "，因为文件修改时间不同");
                     }
 
                     continue;
@@ -414,7 +412,7 @@ namespace 自动备份系统
         /// <summary>
         /// 备份差异项
         /// </summary>
-        private bool moveDiferrences()
+        private bool MoveDiferrences()
         {
             int skipFile = 0;
             int fileCount = 0;
@@ -434,7 +432,7 @@ namespace 自动备份系统
                         //如果目标文件的目录不存在的话就创建一个，否则会报异常
                         targetFile.Directory.Create();
                     }
-                    Thread t = new Thread(new ParameterizedThreadStart(changeStatusText));
+                    Thread t = new Thread(new ParameterizedThreadStart(ChangeStatusText));
                     t.Start("正在复制文件：" + fullFileName[i]);
 
                     //复制文件
@@ -470,7 +468,7 @@ namespace 自动备份系统
                         targetFile.Directory.Create();
                     }
                     
-                    Thread t = new Thread(new ParameterizedThreadStart(changeStatusText));
+                    Thread t = new Thread(new ParameterizedThreadStart(ChangeStatusText));
                     t.Start("正在复制文件："+ aloneFiles[i].FullName);
 
                
@@ -498,7 +496,7 @@ namespace 自动备份系统
             return true;
         }
 
-        private void changeStatusText(object value)
+        private void ChangeStatusText(object value)
         {
             winMain.statusText.Dispatcher.Invoke(new Action(() =>
             {

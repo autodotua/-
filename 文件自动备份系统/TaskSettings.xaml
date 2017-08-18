@@ -109,7 +109,7 @@
                     <ColumnDefinition Width="4"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBox x:Name="txtInterval" Height="24" TextChanged="txtEnterOnlyPlusIntergerNumberTextChangedEventHandler" input:InputMethod.IsInputMethodEnabled="False" MaxLines="1" MaxLength="5" PreviewMouseUp="txtEnterOnlyPlusIntergerNumberPreviewMouseUpEventHandler"/>
+                <TextBox x:Name="txtInterval" Height="24" TextChanged="TxtEnterOnlyPlusIntergerNumberTextChangedEventHandler" input:InputMethod.IsInputMethodEnabled="False" MaxLines="1" MaxLength="5" PreviewMouseUp="TxtEnterOnlyPlusIntergerNumberPreviewMouseUpEventHandler"/>
                 <ComboBox  x:Name="cboTimeUnit" Grid.Column="2" SelectedIndex="0" Width="64" Height="24">
                     <ComboBoxItem Content="秒"/>
                     <ComboBoxItem Content="分"/>
